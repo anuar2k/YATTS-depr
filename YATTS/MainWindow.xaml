@@ -5,8 +5,38 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:YATTS"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
-        
-    </Grid>
+        Title="YATTS" Height="768" Width="1024"
+        ResizeMode="NoResize">
+    <Border Margin="8 4 8 8">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="3*" />
+            </Grid.RowDefinitions>
+            
+            <GroupBox Grid.Row="0" 
+                      Header="Connections">
+                
+            </GroupBox>
+
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <GroupBox Grid.Column="0"  
+                          Header="Variable list"
+                          Margin="0 0 4 0">
+                    
+                </GroupBox>
+                
+                <GroupBox Grid.Column="1" 
+                          Header="Variable inspector"
+                          Margin="4 0 0 0">
+                    
+                </GroupBox>
+            </Grid>
+        </Grid>
+    </Border>
 </Window>
