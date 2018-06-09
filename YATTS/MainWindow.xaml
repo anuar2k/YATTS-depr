@@ -28,13 +28,59 @@
                 <GroupBox Grid.Column="0"  
                           Header="Variable list"
                           Margin="0 0 4 0">
-                    
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <ListView Grid.Row="0" Margin="0 0 0 2">
+                            <ListView.Resources>
+                                <Style TargetType="GridViewColumnHeader">
+                                </Style>
+                            </ListView.Resources>
+                            <ListView.View>
+                                <GridView>
+                                    <GridViewColumn Header="Name" Width="150"/>
+                                    <GridViewColumn Header="Type" Width="80"/>
+                                </GridView>
+                            </ListView.View>
+                        </ListView>
+
+                        <ListView Grid.Row="1" Margin="0 2 0 0">
+
+                            <ListView.Resources>
+                                <Style TargetType="GridViewColumnHeader">
+                                </Style>
+                            </ListView.Resources>
+                            <ListView.View>
+                                <GridView>
+                                    <GridViewColumn Header="Name" Width="150"/>
+                                    <GridViewColumn Header="Type" Width="80"/>
+                                </GridView>
+                            </ListView.View>
+                        </ListView>
+                    </Grid>
                 </GroupBox>
                 
                 <GroupBox Grid.Column="1" 
                           Header="Variable inspector"
                           Margin="4 0 0 0">
-                    
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="ID:" />
+                            <TextBox IsEnabled="{Binding Path=IsFieldEnabled}"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1">
+                            
+                        </StackPanel>
+                    </Grid>
                 </GroupBox>
             </Grid>
         </Grid>
