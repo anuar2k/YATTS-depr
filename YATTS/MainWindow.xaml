@@ -5,13 +5,26 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:YATTS"
         mc:Ignorable="d"
-        Title="YATTS" Height="768" Width="1024"
+        Title="Yet Another Trucking Telemetry Solution"
+        Height="768" Width="1024"
         ResizeMode="NoResize">
+    <Window.Resources>
+        <Style TargetType="GridViewColumnHeader">
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="IsEnabled" Value="False"/>
+            <Style.Triggers>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Foreground" Value="Black"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
     <Border Margin="8 4 8 8">
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="*" />
-                <RowDefinition Height="3*" />
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="3*"/>
             </Grid.RowDefinitions>
             
             <GroupBox Grid.Row="0" 
@@ -21,65 +34,96 @@
 
             <Grid Grid.Row="1">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <GroupBox Grid.Column="0"  
-                          Header="Variable list"
-                          Margin="0 0 4 0">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
+                <Grid Grid.Column="0" 
+                      Margin="0 0 4 0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
 
-                        <ListView Grid.Row="0" Margin="0 0 0 2">
-                            <ListView.Resources>
-                                <Style TargetType="GridViewColumnHeader">
-                                </Style>
-                            </ListView.Resources>
+                    <GroupBox Grid.Row="0"
+                              Header="Streamed variables">
+                        <ListView>
                             <ListView.View>
                                 <GridView>
-                                    <GridViewColumn Header="Name" Width="150"/>
-                                    <GridViewColumn Header="Type" Width="80"/>
+                                    <GridViewColumn Header=" Name" Width="150"/>
+                                    <GridViewColumn Header=" Type" Width="100"/>
+                                    <GridViewColumn Header=" Streamed" Width="61"/>
                                 </GridView>
                             </ListView.View>
                         </ListView>
+                    </GroupBox>
 
-                        <ListView Grid.Row="1" Margin="0 2 0 0">
-
-                            <ListView.Resources>
-                                <Style TargetType="GridViewColumnHeader">
-                                </Style>
-                            </ListView.Resources>
+                    <GroupBox Grid.Row="1"
+                              Header="Event-based variables">
+                        <ListView >
                             <ListView.View>
                                 <GridView>
-                                    <GridViewColumn Header="Name" Width="150"/>
-                                    <GridViewColumn Header="Type" Width="80"/>
+                                    <GridViewColumn Header=" Name" Width="150"/>
+                                    <GridViewColumn Header=" Type" Width="100"/>
+                                    <GridViewColumn Header=" Streamed" Width="61"/>
                                 </GridView>
                             </ListView.View>
                         </ListView>
-                    </Grid>
-                </GroupBox>
-                
+                    </GroupBox>
+                </Grid>
+
                 <GroupBox Grid.Column="1" 
                           Header="Variable inspector"
                           Margin="4 0 0 0">
                     <Grid>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
 
-                        <StackPanel Grid.Column="0">
-                            <TextBlock Text="ID:" />
-                            <TextBox IsEnabled="{Binding Path=IsFieldEnabled}"/>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="1">
+                        <DockPanel Grid.Column="0"
+                                   Margin="0 0 2 0">
+                            <DockPanel.Resources>
+                                <Style TargetType="Control">
+                                    <Setter Property="DockPanel.Dock"
+                                            Value="Top" />
+                                </Style>
+                            </DockPanel.Resources>
                             
-                        </StackPanel>
+                            <TextBlock Text="ID:" 
+                                       DockPanel.Dock="Top"/>
+                            
+                            <TextBox IsEnabled="{Binding Path=IsFieldEnabled}"
+                                     DockPanel.Dock="Top"/>
+                            
+                            <TextBlock Text="Name:" 
+                                       Margin="0 5 0 0"
+                                       DockPanel.Dock="Top"/>
+                            
+                            <TextBox IsEnabled="{Binding Path=IsFieldEnabled}"
+                                     DockPanel.Dock="Top"/>
+                            
+                            <TextBlock Text="Type:" 
+                                       Margin="0 5 0 0"
+                                       DockPanel.Dock="Top"/>
+                            
+                            <TextBox IsEnabled="{Binding Path=IsFieldEnabled}"
+                                     DockPanel.Dock="Top"/>
+                            
+                            <TextBlock Text="Description:" Margin="0 5 0 0"
+                                       DockPanel.Dock="Top"/>
+                            
+                            <TextBox IsEnabled="{Binding Path=IsFieldEnabled}"
+                                     DockPanel.Dock="Top"/>
+                        </DockPanel>
+
+                        <DockPanel Grid.Column="1" 
+                                   Margin="2 0 0 0">
+                            <TextBlock Text="Value:"
+                                       DockPanel.Dock="Top"/>
+                            <TextBox IsEnabled="{Binding Path=IsFieldEnabled}"
+                                     DockPanel.Dock="Top"/>
+                        </DockPanel>
                     </Grid>
                 </GroupBox>
             </Grid>

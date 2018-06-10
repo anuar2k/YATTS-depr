@@ -1,24 +1,39 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
+﻿using System;
+using System.ComponentModel;
+using System.Reflection;
 using System.Windows;
 
 namespace YATTS {
     /// <summary>
     /// Logika interakcji dla klasy MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window {
+    public partial class MainWindow : Window, INotifyPropertyChanged {
+        public event PropertyChangedEventHandler PropertyChanged;
+        
+        private bool _IsFieldEnabled = false;
+        public bool IsFieldEnabled {
+            get {
+                return _IsFieldEnabled;
+            }
+            set {
+                if (value != IsFieldEnabled) {
+                    _IsFieldEnabled = value;
+                    OnPropertyChanged(nameof(IsFieldEnabled));
+                }
+            }
+        }
+
         public MainWindow() {
             InitializeComponent();
+            DataContext = this;
+        }
 
-            ViewModel model = new ViewModel();
-            DataContext = model;
-            
-            Task.Factory.StartNew(() => {
-                while (true) {
-                    model.IsFieldEnabled = !model.IsFieldEnabled;
-                    Thread.Sleep(1000);
-                }
-            });
+        private void Button_Click(object sender, RoutedEventArgs e) {
+            IsFieldEnabled = !IsFieldEnabled;
+        }
+
+        private void OnPropertyChanged(string propertyName) {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }
