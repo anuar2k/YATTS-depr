@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO.MemoryMappedFiles;
+using System.Runtime.InteropServices;
 
 namespace YATTS {
     public abstract class TelemVar {
@@ -29,6 +30,7 @@ namespace YATTS {
         public int DataSize { get; private set; }
         public long Offset { get; private set; }
 
+        public abstract string TypeName { get; }
         public abstract byte[] GetBytes(MemoryMappedViewAccessor source);
         public abstract string StringValue(MemoryMappedViewAccessor source);
     }
@@ -39,6 +41,7 @@ namespace YATTS {
         }
 
         public override int ElementSize => 1;
+        public override string TypeName => ArrayLength == 1 ? "bool" : "bool[]";
 
         public override byte[] GetBytes(MemoryMappedViewAccessor source) {
             byte[] value = new byte[DataSize];
@@ -58,6 +61,7 @@ namespace YATTS {
                 return result;
             }
         }
+
     }
 
     public class U32TelemVar : TelemVar {
@@ -66,6 +70,7 @@ namespace YATTS {
         }
 
         public override int ElementSize => 4;
+        public override string TypeName => ArrayLength == 1 ? "uint32_t" : "uint32_t[]";
 
         public override byte[] GetBytes(MemoryMappedViewAccessor source) {
             byte[] value = new byte[DataSize];
@@ -92,6 +97,8 @@ namespace YATTS {
 
         }
 
+        public override string TypeName => ArrayLength == 1 ? "int32_t" : "int32_t[]";
+
         public override string StringValue(MemoryMappedViewAccessor source) {
             byte[] value = GetBytes(source);
             if (ArrayLength == 1) {
@@ -103,6 +110,60 @@ namespace YATTS {
                 }
                 return result;
             }
+        }
+    }
+
+    public class FloatTelemVar : U32TelemVar {
+        public FloatTelemVar(string ID, string Name, string Description, long offset, int MaxArraySize = 1) : base(ID, Name, Description, offset, MaxArraySize) {
+
+        }
+
+        private bool doMultiply = false;
+        private float _Multiplier = 1.0f;
+        public float Multiplier {
+            get {
+                return _Multiplier;
+            }
+            set {
+                if (value == 1.0f) {
+                    doMultiply = false;
+                } else {
+                    doMultiply = true;
+                }
+                _Multiplier = value;
+            }
+        }
+        public bool ConvertToInt { get; set; } = false;
+
+        public override string TypeName => "todo";
+
+        public override byte[] GetBytes(MemoryMappedViewAccessor source) {
+            byte[] value = new byte[DataSize];
+            source.ReadArray(Offset, value, 0, DataSize);
+
+            if (doMultiply) {
+                for (int i = 0; i < ArrayLength; i++) {
+                    float temp = BitConverter.ToSingle(value, i * ElementSize);
+                    temp *= Multiplier;
+                    byte[] newValue = BitConverter.GetBytes(temp);
+                    Array.Copy(newValue, 0, value, i * ElementSize, ElementSize);
+                }
+            }
+
+            if (ConvertToInt) {
+                for (int i = 0; i < ArrayLength; i++) {
+                    float temp = BitConverter.ToSingle(value, i * ElementSize);
+                    int convertedTemp = (int)Math.Round(temp);
+                    byte[] newValue = BitConverter.GetBytes(convertedTemp);
+                    Array.Copy(newValue, 0, value, i * ElementSize, ElementSize);
+                }
+            }
+
+            return value;
+        }
+
+        public override string StringValue(MemoryMappedViewAccessor source) {
+            return base.StringValue(source);
         }
     }
 }
