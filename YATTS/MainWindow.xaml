@@ -114,7 +114,10 @@
                                        DockPanel.Dock="Top"/>
                             
                             <TextBox IsEnabled="{Binding Path=IsFieldEnabled}"
-                                     DockPanel.Dock="Top"/>
+                                     DockPanel.Dock="Top"
+                                     TextWrapping="Wrap"
+                                     ScrollViewer.VerticalScrollBarVisibility="Visible"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"/>
                         </DockPanel>
 
                         <DockPanel Grid.Column="1" 
@@ -122,7 +125,10 @@
                             <TextBlock Text="Value:"
                                        DockPanel.Dock="Top"/>
                             <TextBox IsEnabled="{Binding Path=IsFieldEnabled}"
-                                     DockPanel.Dock="Top"/>
+                                     DockPanel.Dock="Top"
+                                     TextWrapping="Wrap"
+                                     ScrollViewer.VerticalScrollBarVisibility="Visible"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"/>
                         </DockPanel>
                     </Grid>
                 </GroupBox>

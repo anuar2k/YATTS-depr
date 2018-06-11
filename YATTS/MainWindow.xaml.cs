@@ -1,6 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Reflection;
+using System.Diagnostics;
 using System.Windows;
 
 namespace YATTS {
@@ -10,7 +10,7 @@ namespace YATTS {
     public partial class MainWindow : Window, INotifyPropertyChanged {
         public event PropertyChangedEventHandler PropertyChanged;
         
-        private bool _IsFieldEnabled = false;
+        private bool _IsFieldEnabled = true;
         public bool IsFieldEnabled {
             get {
                 return _IsFieldEnabled;
@@ -26,10 +26,27 @@ namespace YATTS {
         public MainWindow() {
             InitializeComponent();
             DataContext = this;
-        }
 
-        private void Button_Click(object sender, RoutedEventArgs e) {
-            IsFieldEnabled = !IsFieldEnabled;
+            TelemVar ttv = new FloatTelemVar("ID", "Name", "Desc", 1000, Consts.TRUCK_WHEEL_COUNT);
+            Debug.WriteLine(ttv.ArrayLength);
+            Debug.WriteLine(ttv.DataSize);
+            Debug.WriteLine(ttv.Description);
+            Debug.WriteLine(ttv.ElementSize);
+            Debug.WriteLine(ttv.ID);
+            Debug.WriteLine(ttv.MaxArrayLength);
+            Debug.WriteLine(ttv.Name);
+            Debug.WriteLine(ttv.Offset);
+            Debug.WriteLine(ttv.TypeName);
+
+            if (ttv is FloatTelemVar ttvf) {
+                ttvf.ArrayLength = 4;
+                Debug.WriteLine(ttv.ArrayLength);
+                Debug.WriteLine(ttv.DataSize);
+                Debug.WriteLine(ttv.ElementSize);
+                Debug.WriteLine(ttv.MaxArrayLength);
+                ttvf.ConvertToInt = true;
+                Debug.WriteLine(ttv.TypeName);
+            }
         }
 
         private void OnPropertyChanged(string propertyName) {
