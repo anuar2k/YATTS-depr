@@ -138,9 +138,9 @@ namespace YATTS {
             get {
                 if (ConvertToInt) {
                     if (ArrayLength == 1) {
-                        return "int32_t";
+                        return "float -> int32_t";
                     } else {
-                        return "int32_t[]";
+                        return "float[] -> int32_t[]";
                     }
                 } else {
                     if (ArrayLength == 1) {
@@ -164,6 +164,7 @@ namespace YATTS {
                     Array.Copy(newValue, 0, value, i * ElementSize, ElementSize);
                 }
             }
+            
 
             if (ConvertToInt) {
                 for (int i = 0; i < ArrayLength; i++) {

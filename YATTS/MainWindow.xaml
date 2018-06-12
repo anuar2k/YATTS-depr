@@ -20,16 +20,28 @@
         </Style>
     </Window.Resources>
 
-    <Border Margin="8 4 8 8">
-        <Grid>
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem Header="_New" />
+                <MenuItem Header="_Open" />
+                <MenuItem Header="_Exit" />
+            </MenuItem>
+            
+            <MenuItem Header="_Help">
+                
+            </MenuItem>
+        </Menu>
+
+        <Grid Margin="8 2 8 8">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="3*"/>
             </Grid.RowDefinitions>
-            
+
             <GroupBox Grid.Row="0" 
                       Header="Connections">
-                
+
             </GroupBox>
 
             <Grid Grid.Row="1">
@@ -89,30 +101,58 @@
                                             Value="Top" />
                                 </Style>
                             </DockPanel.Resources>
-                            
+
                             <TextBlock Text="ID:" 
                                        DockPanel.Dock="Top"/>
-                            
+
                             <TextBox IsEnabled="{Binding Path=IsFieldEnabled}"
                                      DockPanel.Dock="Top"/>
-                            
+
                             <TextBlock Text="Name:" 
                                        Margin="0 5 0 0"
                                        DockPanel.Dock="Top"/>
-                            
+
                             <TextBox IsEnabled="{Binding Path=IsFieldEnabled}"
                                      DockPanel.Dock="Top"/>
-                            
+
                             <TextBlock Text="Type:" 
                                        Margin="0 5 0 0"
                                        DockPanel.Dock="Top"/>
-                            
+
                             <TextBox IsEnabled="{Binding Path=IsFieldEnabled}"
                                      DockPanel.Dock="Top"/>
-                            
+
+                            <TextBlock Text="Additional options for float type:"
+                                       Margin="0 5 0 5"
+                                       DockPanel.Dock="Top" />
+
+                            <DockPanel DockPanel.Dock="Top"
+                                       Margin="0 0 0 5">
+                                <TextBlock Text="Multiply by: "/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="3*" />
+                                        <ColumnDefinition Width="2*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Grid.Column="0"
+                                             Margin="2 0 4 0"/>
+                                    <Button Grid.Column="1"
+                                            Content="Multipliers"/>
+                                </Grid>
+                            </DockPanel>
+
+                            <RadioButton Content="Don't convert"
+                                         DockPanel.Dock="Top"/>
+                            <RadioButton Content="Floor it and convert to int32"
+                                         DockPanel.Dock="Top"/>
+                            <RadioButton Content="Round it and convert to int32"
+                                         DockPanel.Dock="Top"/>
+                            <RadioButton Content="Ceil it and convert to int32"
+                                         DockPanel.Dock="Top"/>
+
                             <TextBlock Text="Description:" Margin="0 5 0 0"
                                        DockPanel.Dock="Top"/>
-                            
+
                             <TextBox IsEnabled="{Binding Path=IsFieldEnabled}"
                                      DockPanel.Dock="Top"
                                      TextWrapping="Wrap"
@@ -134,5 +174,5 @@
                 </GroupBox>
             </Grid>
         </Grid>
-    </Border>
+    </DockPanel>
 </Window>
