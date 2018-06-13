@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         xmlns:local="clr-namespace:YATTS"
         mc:Ignorable="d"
         Title="Yet Another Trucking Telemetry Solution"
@@ -59,11 +60,12 @@
 
                     <GroupBox Grid.Row="0"
                               Header="Streamed variables">
-                        <ListView>
+                        <ListView SelectionMode="Single">
                             <ListView.View>
                                 <GridView>
-                                    <GridViewColumn Header=" Name" Width="150"/>
-                                    <GridViewColumn Header=" Type" Width="100"/>
+                                    <GridViewColumn Header=" Name" Width="241"/>
+                                    <GridViewColumn Header=" Type" Width="120"/>
+                                    <GridViewColumn Header=" Quantity" Width="58"/>
                                     <GridViewColumn Header=" Streamed" Width="61"/>
                                 </GridView>
                             </ListView.View>
@@ -72,11 +74,12 @@
 
                     <GroupBox Grid.Row="1"
                               Header="Event-based variables">
-                        <ListView >
+                        <ListView SelectionMode="Single">
                             <ListView.View>
                                 <GridView>
-                                    <GridViewColumn Header=" Name" Width="150"/>
-                                    <GridViewColumn Header=" Type" Width="100"/>
+                                    <GridViewColumn Header=" Name" Width="241"/>
+                                    <GridViewColumn Header=" Type" Width="120"/>
+                                    <GridViewColumn Header=" Quantity" Width="58"/>
                                     <GridViewColumn Header=" Streamed" Width="61"/>
                                 </GridView>
                             </ListView.View>
@@ -122,8 +125,16 @@
                             <TextBox IsEnabled="{Binding Path=IsFieldEnabled}"
                                      DockPanel.Dock="Top"/>
 
+                            <DockPanel DockPanel.Dock="Top"
+                                       Margin="0 5 0 0">
+                                <TextBlock Text="Stream first "/>
+                                <xctk:IntegerUpDown Value="1" 
+                                                    Minimum="1"
+                                                    Maximum="32"/>
+                                <TextBlock Text=" elements"/>
+                            </DockPanel>
                             <TextBlock Text="Additional options for float type:"
-                                       Margin="0 5 0 5"
+                                       Margin="0 3 0 5"
                                        DockPanel.Dock="Top" />
 
                             <DockPanel DockPanel.Dock="Top"

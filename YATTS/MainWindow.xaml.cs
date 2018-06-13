@@ -44,7 +44,7 @@ namespace YATTS {
                 Debug.WriteLine(ttv.DataSize);
                 Debug.WriteLine(ttv.ElementSize);
                 Debug.WriteLine(ttv.MaxArrayLength);
-                ttvf.ConvertToInt = true;
+                ttvf.ConvertToInt = ConvertType.ROUND;
                 Debug.WriteLine(ttv.TypeName);
             }
         }

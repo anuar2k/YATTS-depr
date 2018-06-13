@@ -132,11 +132,12 @@ namespace YATTS {
                 _Multiplier = value;
             }
         }
-        public bool ConvertToInt { get; set; } = false;
+
+        public ConvertType ConvertToInt { get; set; } = ConvertType.NONE;
 
         public override string TypeName {
             get {
-                if (ConvertToInt) {
+                if (ConvertToInt != ConvertType.NONE) {
                     if (ArrayLength == 1) {
                         return "float -> int32_t";
                     } else {
@@ -166,10 +167,21 @@ namespace YATTS {
             }
             
 
-            if (ConvertToInt) {
+            if (ConvertToInt != ConvertType.NONE) {
                 for (int i = 0; i < ArrayLength; i++) {
                     float temp = ToSingle(value, i * ElementSize);
-                    int convertedTemp = (int)Math.Round(temp);
+                    int convertedTemp = 0;
+                    switch (ConvertToInt) {
+                        case ConvertType.FLOOR:
+                            convertedTemp = (int)Math.Floor(temp);
+                            break;
+                        case ConvertType.ROUND:
+                            convertedTemp = (int)Math.Round(temp);
+                            break;
+                        case ConvertType.CEIL:
+                            convertedTemp = (int)Math.Ceiling(temp);
+                            break;
+                    }
                     byte[] newValue = GetBytes(convertedTemp);
                     Array.Copy(newValue, 0, value, i * ElementSize, ElementSize);
                 }
@@ -181,11 +193,11 @@ namespace YATTS {
         public override string GetStringValue(MemoryMappedViewAccessor source) {
             byte[] value = GetByteValue(source);
             if (ArrayLength == 1) {
-                return ConvertToInt ? $"{ToInt32(value, 0)}\r\n" : $"{ToSingle(value, 0)}\r\n";
+                return ConvertToInt != ConvertType.NONE ? $"{ToInt32(value, 0)}\r\n" : $"{ToSingle(value, 0)}\r\n";
             } else {
                 string result = string.Empty;
                 for (int i = 0; i < ArrayLength; i++) {
-                    result += ConvertToInt ? $"{i}: {ToInt32(value, i * ElementSize)}\r\n" : $"{i}: {ToSingle(value, i * ElementSize)}\r\n";
+                    result += ConvertToInt != ConvertType.NONE ? $"{i}: {ToInt32(value, i * ElementSize)}\r\n" : $"{i}: {ToSingle(value, i * ElementSize)}\r\n";
                 }
                 return result;
             }
@@ -360,5 +372,12 @@ namespace YATTS {
         public override string GetStringValue(MemoryMappedViewAccessor source) {
             return System.Text.Encoding.UTF8.GetString(GetByteValue(source));
         }
+    }
+
+    public enum ConvertType {
+        NONE,
+        FLOOR,
+        ROUND,
+        CEIL
     }
 }
