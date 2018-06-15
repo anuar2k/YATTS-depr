@@ -3,11 +3,12 @@ using System.IO.MemoryMappedFiles;
 using static System.BitConverter;
 
 namespace YATTS {
-    public abstract class TelemVar {
-        public TelemVar(string ID, string Name, string Description, long Offset, int MaxArrayLength = 1) {
+    abstract class TelemVar {
+        public TelemVar(string ID, string Name, string Description, string Category, long Offset, int MaxArrayLength = 1) {
             this.ID = ID;
             this.Name = Name;
             this.Description = Description;
+            this.Category = Category;
             this.Offset = Offset;
             this.MaxArrayLength = MaxArrayLength;
             ArrayLength = MaxArrayLength;
@@ -16,6 +17,7 @@ namespace YATTS {
         public string ID { get; private set; }
         public string Name { get; private set; }
         public string Description { get; private set; }
+        public string Category { get; private set; }
         public int MaxArrayLength { get; private set; }
 
         private int _ArrayLength;
@@ -46,8 +48,8 @@ namespace YATTS {
         public abstract string GetStringValue(MemoryMappedViewAccessor source);
     }
 
-    public class BoolTelemVar : TelemVar {
-        public BoolTelemVar(string ID, string Name, string Description, long offset, int MaxArraySize = 1) : base(ID, Name, Description, offset, MaxArraySize) {
+    class BoolTelemVar : TelemVar {
+        public BoolTelemVar(string ID, string Name, string Description, string Category, long offset, int MaxArraySize = 1) : base(ID, Name, Description, Category, offset, MaxArraySize) {
 
         }
 
@@ -57,7 +59,7 @@ namespace YATTS {
         public override string GetStringValue(MemoryMappedViewAccessor source) {
             byte[] value = GetByteValue(source);
             if (ArrayLength == 1) {
-                return $"{ToBoolean(value, 0).ToString()}\r\n";
+                return $"{ToBoolean(value, 0)}\r\n";
             } else {
                 string result = string.Empty;
                 for (int i = 0; i < ArrayLength; i++) {
@@ -69,8 +71,30 @@ namespace YATTS {
 
     }
 
-    public class U32TelemVar : TelemVar {
-        public U32TelemVar(string ID, string Name, string Description, long offset, int MaxArraySize = 1) : base(ID, Name, Description, offset, MaxArraySize) {
+    class U8TelemVar : TelemVar {
+        public U8TelemVar(string ID, string Name, string Description, string Category, long offset, int MaxArraySize = 1) : base(ID, Name, Description, Category, offset, MaxArraySize) {
+
+        }
+
+        public override int ElementSize => 1;
+        public override string TypeName => ArrayLength == 1 ? "byte" : "byte[]";
+
+        public override string GetStringValue(MemoryMappedViewAccessor source) {
+            byte[] value = GetByteValue(source);
+            if (ArrayLength == 1) {
+                return $"{value[0]}\r\n";
+            } else {
+                string result = string.Empty;
+                for (int i = 0; i < ArrayLength; i++) {
+                    result += $"{i}: {value[i]}\r\n";
+                }
+                return result;
+            }
+        }
+    }
+
+    class U32TelemVar : TelemVar {
+        public U32TelemVar(string ID, string Name, string Description, string Category, long offset, int MaxArraySize = 1) : base(ID, Name, Description, Category, offset, MaxArraySize) {
 
         }
 
@@ -91,11 +115,12 @@ namespace YATTS {
         }
     }
 
-    public class S32TelemVar : U32TelemVar {
-        public S32TelemVar(string ID, string Name, string Description, long offset, int MaxArraySize = 1) : base(ID, Name, Description, offset, MaxArraySize) {
+    class S32TelemVar : TelemVar {
+        public S32TelemVar(string ID, string Name, string Description, string Category, long offset, int MaxArraySize = 1) : base(ID, Name, Description, Category, offset, MaxArraySize) {
 
         }
 
+        public override int ElementSize => 4;
         public override string TypeName => ArrayLength == 1 ? "int32_t" : "int32_t[]";
 
         public override string GetStringValue(MemoryMappedViewAccessor source) {
@@ -112,8 +137,8 @@ namespace YATTS {
         }
     }
 
-    public class FloatTelemVar : U32TelemVar {
-        public FloatTelemVar(string ID, string Name, string Description, long offset, int MaxArraySize = 1) : base(ID, Name, Description, offset, MaxArraySize) {
+    class FloatTelemVar : TelemVar {
+        public FloatTelemVar(string ID, string Name, string Description, string Category, long offset, int MaxArraySize = 1) : base(ID, Name, Description, Category, offset, MaxArraySize) {
 
         }
 
@@ -135,6 +160,7 @@ namespace YATTS {
 
         public ConvertType ConvertToInt { get; set; } = ConvertType.NONE;
 
+        public override int ElementSize => 4;
         public override string TypeName {
             get {
                 if (ConvertToInt != ConvertType.NONE) {
@@ -204,8 +230,8 @@ namespace YATTS {
         }
     }
 
-    public class U64TelemVar : TelemVar {
-        public U64TelemVar(string ID, string Name, string Description, long offset, int MaxArrayLength = 1) : base(ID, Name, Description, offset, MaxArrayLength) {
+    class U64TelemVar : TelemVar {
+        public U64TelemVar(string ID, string Name, string Description, string Category, long offset, int MaxArrayLength = 1) : base(ID, Name, Description, Category, offset, MaxArrayLength) {
 
         }
 
@@ -226,8 +252,8 @@ namespace YATTS {
         }
     }
 
-    public class FVectorTelemVar : TelemVar {
-        public FVectorTelemVar(string ID, string Name, string Description, long offset, int MaxArrayLength = 1) : base(ID, Name, Description, offset, MaxArrayLength) {
+    class FVectorTelemVar : TelemVar {
+        public FVectorTelemVar(string ID, string Name, string Description, string Category, long offset, int MaxArrayLength = 1) : base(ID, Name, Description, Category, offset, MaxArrayLength) {
 
         }
 
@@ -254,8 +280,8 @@ namespace YATTS {
         }
     }
 
-    public class DVectorTelemVar : TelemVar {
-        public DVectorTelemVar(string ID, string Name, string Description, long offset, int MaxArrayLength = 1) : base(ID, Name, Description, offset, MaxArrayLength) {
+    class DVectorTelemVar : TelemVar {
+        public DVectorTelemVar(string ID, string Name, string Description, string Category, long offset, int MaxArrayLength = 1) : base(ID, Name, Description, Category, offset, MaxArrayLength) {
 
         }
 
@@ -282,8 +308,8 @@ namespace YATTS {
         }
     }
 
-    public class FPlacementTelemVar : TelemVar {
-        public FPlacementTelemVar(string ID, string Name, string Description, long offset, int MaxArrayLength = 1) : base(ID, Name, Description, offset, MaxArrayLength) {
+    class FPlacementTelemVar : TelemVar {
+        public FPlacementTelemVar(string ID, string Name, string Description, string Category, long offset, int MaxArrayLength = 1) : base(ID, Name, Description, Category, offset, MaxArrayLength) {
 
         }
 
@@ -316,8 +342,8 @@ namespace YATTS {
         }
     }
 
-    public class DPlacementTelemVar : TelemVar {
-        public DPlacementTelemVar(string ID, string Name, string Description, long offset, int MaxArrayLength = 1) : base(ID, Name, Description, offset, MaxArrayLength) {
+    class DPlacementTelemVar : TelemVar {
+        public DPlacementTelemVar(string ID, string Name, string Description, string Category, long offset, int MaxArrayLength = 1) : base(ID, Name, Description, Category, offset, MaxArrayLength) {
 
         }
 
@@ -350,13 +376,12 @@ namespace YATTS {
         }
     }
 
-    public class ASCIITelemVar : TelemVar {
-        public ASCIITelemVar(string ID, string Name, string Description, long offset, int MaxArrayLength = 1) : base(ID, Name, Description, offset, MaxArrayLength) {
+    class ASCIITelemVar : TelemVar {
+        public ASCIITelemVar(string ID, string Name, string Description, string Category, long offset, int MaxArrayLength = 1) : base(ID, Name, Description, Category, offset, MaxArrayLength) {
 
         }
 
         public override int ElementSize => 64;
-
         public override string TypeName => "char[]";
 
         public override string GetStringValue(MemoryMappedViewAccessor source) {
@@ -364,10 +389,13 @@ namespace YATTS {
         }
     }
 
-    public class UTF8TelemVar : ASCIITelemVar {
-        public UTF8TelemVar(string ID, string Name, string Description, long offset, int MaxArrayLength = 1) : base(ID, Name, Description, offset, MaxArrayLength) {
+    class UTF8TelemVar : TelemVar {
+        public UTF8TelemVar(string ID, string Name, string Description, string Category, long offset, int MaxArrayLength = 1) : base(ID, Name, Description, Category, offset, MaxArrayLength) {
 
         }
+
+        public override int ElementSize => 64;
+        public override string TypeName => "char[]";
 
         public override string GetStringValue(MemoryMappedViewAccessor source) {
             return System.Text.Encoding.UTF8.GetString(GetByteValue(source));

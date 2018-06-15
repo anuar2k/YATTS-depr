@@ -9,7 +9,8 @@ namespace YATTS {
     /// </summary>
     public partial class MainWindow : Window, INotifyPropertyChanged {
         public event PropertyChangedEventHandler PropertyChanged;
-        
+        private MemoryRepresentation memoryRepresentation;
+
         private bool _IsFieldEnabled = true;
         public bool IsFieldEnabled {
             get {
@@ -27,26 +28,7 @@ namespace YATTS {
             InitializeComponent();
             DataContext = this;
 
-            TelemVar ttv = new FloatTelemVar("ID", "Name", "Desc", 1000, Consts.TRUCK_WHEEL_COUNT);
-            Debug.WriteLine(ttv.ArrayLength);
-            Debug.WriteLine(ttv.DataSize);
-            Debug.WriteLine(ttv.Description);
-            Debug.WriteLine(ttv.ElementSize);
-            Debug.WriteLine(ttv.ID);
-            Debug.WriteLine(ttv.MaxArrayLength);
-            Debug.WriteLine(ttv.Name);
-            Debug.WriteLine(ttv.Offset);
-            Debug.WriteLine(ttv.TypeName);
-
-            if (ttv is FloatTelemVar ttvf) {
-                ttvf.ArrayLength = 4;
-                Debug.WriteLine(ttv.ArrayLength);
-                Debug.WriteLine(ttv.DataSize);
-                Debug.WriteLine(ttv.ElementSize);
-                Debug.WriteLine(ttv.MaxArrayLength);
-                ttvf.ConvertToInt = ConvertType.ROUND;
-                Debug.WriteLine(ttv.TypeName);
-            }
+            memoryRepresentation = new MemoryRepresentation();
         }
 
         private void OnPropertyChanged(string propertyName) {

@@ -87,7 +87,10 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Consts.cs" />
-    <Compile Include="TelemVar.cs" />
+    <Compile Include="MemoryRepresentation\DataStatus.cs" />
+    <Compile Include="MemoryRepresentation\EventVariableList.cs" />
+    <Compile Include="MemoryRepresentation\TelemVar.cs" />
+    <Compile Include="MemoryRepresentation\MemoryRepresentation.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

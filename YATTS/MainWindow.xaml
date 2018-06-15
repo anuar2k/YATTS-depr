@@ -98,12 +98,6 @@
 
                         <DockPanel Grid.Column="0"
                                    Margin="0 0 2 0">
-                            <DockPanel.Resources>
-                                <Style TargetType="Control">
-                                    <Setter Property="DockPanel.Dock"
-                                            Value="Top" />
-                                </Style>
-                            </DockPanel.Resources>
 
                             <TextBlock Text="ID:" 
                                        DockPanel.Dock="Top"/>
