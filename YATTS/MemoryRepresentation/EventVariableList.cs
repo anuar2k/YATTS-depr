@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO.MemoryMappedFiles;
 
 namespace YATTS {
-    class EventVariableList
+    public class EventVariableList
     {
         public List<TelemVar> TruckData;
         public List<TelemVar> TrailerData;

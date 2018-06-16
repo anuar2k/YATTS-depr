@@ -1,20 +1,47 @@
 ﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using static YATTS.Consts;
 
 namespace YATTS {
-    class MemoryRepresentation {
-        public List<TelemVar> StreamedVars { get; private set; }
+    public class MemoryRepresentation : INotifyPropertyChanged {
+        public ObservableCollection<TelemVar> StreamedVars { get; private set; }
         public EventVariableList EventVars { get; private set; }
-        public TelemVar Selected { get; set; }
+
+        private TelemVar _Selected;
+        public TelemVar Selected {
+            get {
+                return _Selected;
+            }
+            set {
+                if (value != _Selected) {
+                    _Selected = value;
+                    OnPropertyChanged(nameof(Selected));
+                    SelectedFloat = value as FloatTelemVar;
+                }
+            }
+        }
+
+        private FloatTelemVar _SelectedFloat;
+        public FloatTelemVar SelectedFloat {
+            get {
+                return _SelectedFloat;
+            }
+            set {
+                if (value != _SelectedFloat) {
+                    _SelectedFloat = value;
+                    OnPropertyChanged(nameof(SelectedFloat));
+                }
+            }
+        }
 
         public MemoryRepresentation() {
-            StreamedVars = new List<TelemVar> {
+            StreamedVars = new ObservableCollection<TelemVar> {
                 new U32TelemVar("plugin_version", "", "", "", 0),
                 new U32TelemVar("game", "", "", "", 4),
                 new U32TelemVar("sdk_version", "", "", "", 8),
                 new BoolTelemVar("paused", "", "", "", 12),
-                new BoolTelemVar("paused", "", "", "", 12),
-                new FloatTelemVar("g_local_scale", "", "", "", 13),
+                new FloatTelemVar("g_local_scale", "", "", "", 13, 8),
                 new U32TelemVar("g_game_time", "", "", "", 17),
                 new S32TelemVar("g_next_rest_stop", "", "", "", 21),
                 new DPlacementTelemVar("t_world_placement", "", "", "", 25),
@@ -174,6 +201,12 @@ namespace YATTS {
             U8TelemVar jobDataMarker = new U8TelemVar(null, null, null, null, 926);
 
             EventVars = new EventVariableList(TruckData, TrailerData, JobData, truckDataMarker, trailerDataMarker, jobDataMarker);
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        private void OnPropertyChanged(string sender) {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(sender));
         }
     }
 }
