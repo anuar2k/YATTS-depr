@@ -10,6 +10,10 @@
         Height="768" Width="1024"
         ResizeMode="CanMinimize">
     <Window.Resources>
+        <local:IsNullToBoolConverter x:Key="NullToBool"/>
+        <local:ConvertTypeToRadioConverter x:Key="ConvertTypeToRadio"/>
+        <local:BoolToFontWeightConverter x:Key="BoolToFontWeight" />
+        
         <Style TargetType="GridViewColumnHeader">
             <Setter Property="HorizontalContentAlignment" Value="Left"/>
             <Setter Property="IsEnabled" Value="False"/>
@@ -19,8 +23,23 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
-        <local:IsNullToBoolConverter x:Key="NullToBool"/>
-        <local:ConvertTypeToRadioConverter x:Key="ConvertTypeToRadio"/>
+
+        <Style TargetType="ListViewItem">
+            <Setter Property="FontWeight" Value="{Binding Streamed, Mode=OneWay, Converter={StaticResource BoolToFontWeight}}"/>
+            <EventSetter Event="MouseDoubleClick" Handler="ListViewItem_MouseDoubleClick"/>
+        </Style>
+
+        <CollectionViewSource Source="{Binding StreamedVars}" x:Key="StreamedVars">
+            <CollectionViewSource.GroupDescriptions>
+                <PropertyGroupDescription PropertyName="Category" />
+            </CollectionViewSource.GroupDescriptions>
+        </CollectionViewSource>
+        
+        <CollectionViewSource Source="{Binding EventVariableList.EventVars}" x:Key="EventVars">
+            <CollectionViewSource.GroupDescriptions>
+                <PropertyGroupDescription PropertyName="Category" />
+            </CollectionViewSource.GroupDescriptions>
+        </CollectionViewSource>
     </Window.Resources>
 
     <DockPanel>
@@ -62,9 +81,12 @@
 
                     <GroupBox Grid.Row="0"
                               Header="Streamed variables">
-                        <ListView Name="streamedListView" SelectionMode="Single"
+                        <ListView Name="streamedListView" 
+                                  SelectionMode="Single"
                                   ScrollViewer.VerticalScrollBarVisibility="Visible"
-                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                  ItemsSource="{Binding Source={StaticResource StreamedVars}}"
+                                  SelectionChanged="streamedListView_SelectionChanged">
                             <ListView.View>
                                 <GridView>
                                     <GridViewColumn Header=" Name" 
@@ -81,26 +103,53 @@
                                                     DisplayMemberBinding="{Binding Streamed}"/>
                                 </GridView>
                             </ListView.View>
+
+                            <ListView.GroupStyle>
+                                <GroupStyle>
+                                    <GroupStyle.HeaderTemplate>
+                                        <DataTemplate>
+                                            <TextBlock FontWeight="Bold" FontSize="14" Text="{Binding Name}"/>
+                                        </DataTemplate>
+                                    </GroupStyle.HeaderTemplate>
+                                </GroupStyle>
+                            </ListView.GroupStyle>
                         </ListView>
                     </GroupBox>
 
                     <GroupBox Grid.Row="1"
                               Header="Event-based variables">
-                        <ListView SelectionMode="Single"
+                        <ListView Name="eventListView"
+                                  SelectionMode="Single"
                                   ScrollViewer.VerticalScrollBarVisibility="Visible"
-                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                  ItemsSource="{Binding Source={StaticResource EventVars}}"
+                                  SelectionChanged="eventListView_SelectionChanged">
                             <ListView.View>
                                 <GridView>
                                     <GridViewColumn Header=" Name" 
-                                                    Width="223"/>
+                                                    Width="223"
+                                                    DisplayMemberBinding="{Binding ID}"/>
                                     <GridViewColumn Header=" Type" 
-                                                    Width="120"/>
+                                                    Width="120"
+                                                    DisplayMemberBinding="{Binding TypeName}"/>
                                     <GridViewColumn Header=" Quantity" 
-                                                    Width="58"/>
+                                                    Width="58"
+                                                    DisplayMemberBinding="{Binding ArrayLength}"/>
                                     <GridViewColumn Header=" Streamed" 
-                                                    Width="61"/>
+                                                    Width="61"
+                                                    DisplayMemberBinding="{Binding Streamed}"/>
                                 </GridView>
                             </ListView.View>
+
+                            <ListView.GroupStyle>
+                                <GroupStyle>
+                                    <GroupStyle.HeaderTemplate>
+                                        <DataTemplate>
+                                            <TextBlock FontWeight="Bold" FontSize="14" Text="{Binding Name}"/>
+                                        </DataTemplate>
+                                    </GroupStyle.HeaderTemplate>
+                                </GroupStyle>
+                            </ListView.GroupStyle>
                         </ListView>
                     </GroupBox>
                 </Grid>
@@ -117,13 +166,20 @@
                         <DockPanel Grid.Column="0"
                                    Margin="0 0 2 0">
 
+                            <CheckBox DockPanel.Dock="Top"
+                                      Margin="0 5 0 5"
+                                      IsChecked="{Binding Selected.Streamed}">
+                                <TextBlock Text="Stream this value to your device"
+                                           FontWeight="Bold"/>
+                            </CheckBox>
+                                
                             <TextBlock Text="ID:" 
                                        DockPanel.Dock="Top"/>
 
                             <TextBox DockPanel.Dock="Top"
                                      IsReadOnly="True"
-                                     Text="{Binding MemoryRepresentation.Selected.ID, Mode=OneWay}"
-                                     IsEnabled="{Binding MemoryRepresentation.Selected, Mode=OneWay, Converter={StaticResource NullToBool}}"/>
+                                     Text="{Binding Selected.ID, Mode=OneWay}"
+                                     IsEnabled="{Binding Selected, Mode=OneWay, Converter={StaticResource NullToBool}}"/>
 
                             <TextBlock Text="Name:" 
                                        Margin="0 5 0 0"
@@ -131,8 +187,8 @@
 
                             <TextBox DockPanel.Dock="Top"
                                      IsReadOnly="True"
-                                     Text="{Binding MemoryRepresentation.Selected.Name, Mode=OneWay}"
-                                     IsEnabled="{Binding MemoryRepresentation.Selected, Mode=OneWay, Converter={StaticResource NullToBool}}"/>
+                                     Text="{Binding Selected.Name, Mode=OneWay}"
+                                     IsEnabled="{Binding Selected, Mode=OneWay, Converter={StaticResource NullToBool}}"/>
 
                             <TextBlock Text="Type:" 
                                        Margin="0 5 0 0"
@@ -140,16 +196,16 @@
 
                             <TextBox DockPanel.Dock="Top"
                                      IsReadOnly="True"
-                                     Text="{Binding MemoryRepresentation.Selected.TypeName, Mode=OneWay}"
-                                     IsEnabled="{Binding MemoryRepresentation.Selected, Mode=OneWay, Converter={StaticResource NullToBool}}"/>
+                                     Text="{Binding Selected.TypeName, Mode=OneWay}"
+                                     IsEnabled="{Binding Selected, Mode=OneWay, Converter={StaticResource NullToBool}}"/>
 
                             <DockPanel DockPanel.Dock="Top"
                                        Margin="0 5 0 0">
                                 <TextBlock Text="Stream first "/>
-                                <xctk:IntegerUpDown Value="{Binding MemoryRepresentation.Selected.ArrayLength}" 
+                                <xctk:IntegerUpDown Value="{Binding Selected.ArrayLength}" 
                                                     Minimum="1"
-                                                    Maximum="{Binding MemoryRepresentation.Selected.MaxArrayLength}"
-                                                    IsEnabled="{Binding MemoryRepresentation.Selected, Mode=OneWay, Converter={StaticResource NullToBool}}"/>
+                                                    Maximum="{Binding Selected.MaxArrayLength}"
+                                                    IsEnabled="{Binding Selected, Mode=OneWay, Converter={StaticResource NullToBool}}"/>
                                 <TextBlock Text=" elements"/>
                             </DockPanel>
                             <TextBlock Text="Additional options for float type:"
@@ -166,33 +222,33 @@
                                     </Grid.ColumnDefinitions>
                                     <TextBox Grid.Column="0"
                                              Margin="2 0 4 0"
-                                             IsEnabled="{Binding MemoryRepresentation.SelectedFloat, Mode=OneWay, Converter={StaticResource NullToBool}}"/>
+                                             IsEnabled="{Binding SelectedFloat, Mode=OneWay, Converter={StaticResource NullToBool}}"/>
                                     <Button Grid.Column="1"
                                             Content="Multipliers"
-                                            IsEnabled="{Binding MemoryRepresentation.SelectedFloat, Mode=OneWay, Converter={StaticResource NullToBool}}"/>
+                                            IsEnabled="{Binding SelectedFloat, Mode=OneWay, Converter={StaticResource NullToBool}}"/>
                                 </Grid>
                             </DockPanel>
 
                             <RadioButton Content="Don't convert"
                                          DockPanel.Dock="Top"
                                          GroupName="A"
-                                         IsEnabled="{Binding MemoryRepresentation.SelectedFloat, Mode=OneWay, Converter={StaticResource NullToBool}}"
-                                         IsChecked="{Binding MemoryRepresentation.SelectedFloat.ConvertToInt, Converter={StaticResource ConvertTypeToRadio}, ConverterParameter=NONE}"/>
+                                         IsEnabled="{Binding SelectedFloat, Mode=OneWay, Converter={StaticResource NullToBool}}"
+                                         IsChecked="{Binding SelectedFloat.ConvertToInt, Converter={StaticResource ConvertTypeToRadio}, ConverterParameter=NONE}"/>
                             <RadioButton Content="Floor it and convert to int32"
                                          DockPanel.Dock="Top"
                                          GroupName="A"
-                                         IsEnabled="{Binding MemoryRepresentation.SelectedFloat, Mode=OneWay, Converter={StaticResource NullToBool}}"
-                                         IsChecked="{Binding MemoryRepresentation.SelectedFloat.ConvertToInt, Converter={StaticResource ConvertTypeToRadio}, ConverterParameter=FLOOR}"/>
+                                         IsEnabled="{Binding SelectedFloat, Mode=OneWay, Converter={StaticResource NullToBool}}"
+                                         IsChecked="{Binding SelectedFloat.ConvertToInt, Converter={StaticResource ConvertTypeToRadio}, ConverterParameter=FLOOR}"/>
                             <RadioButton Content="Round it and convert to int32"
                                          DockPanel.Dock="Top"
                                          GroupName="A"
-                                         IsEnabled="{Binding MemoryRepresentation.SelectedFloat, Mode=OneWay, Converter={StaticResource NullToBool}}"
-                                         IsChecked="{Binding MemoryRepresentation.SelectedFloat.ConvertToInt, Converter={StaticResource ConvertTypeToRadio}, ConverterParameter=ROUND}"/>
+                                         IsEnabled="{Binding SelectedFloat, Mode=OneWay, Converter={StaticResource NullToBool}}"
+                                         IsChecked="{Binding SelectedFloat.ConvertToInt, Converter={StaticResource ConvertTypeToRadio}, ConverterParameter=ROUND}"/>
                             <RadioButton Content="Ceil it and convert to int32"
                                          DockPanel.Dock="Top"
                                          GroupName="A"
-                                         IsEnabled="{Binding MemoryRepresentation.SelectedFloat, Mode=OneWay, Converter={StaticResource NullToBool}}"
-                                         IsChecked="{Binding MemoryRepresentation.SelectedFloat.ConvertToInt, Converter={StaticResource ConvertTypeToRadio}, ConverterParameter=CEIL}"/>
+                                         IsEnabled="{Binding SelectedFloat, Mode=OneWay, Converter={StaticResource NullToBool}}"
+                                         IsChecked="{Binding SelectedFloat.ConvertToInt, Converter={StaticResource ConvertTypeToRadio}, ConverterParameter=CEIL}"/>
 
                             <TextBlock Text="Description:" Margin="0 5 0 0"
                                        DockPanel.Dock="Top"/>
@@ -202,8 +258,8 @@
                                      TextWrapping="Wrap"
                                      ScrollViewer.VerticalScrollBarVisibility="Visible"
                                      ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                     Text="{Binding MemoryRepresentation.Selected.Description, Mode=OneWay}"
-                                     IsEnabled="{Binding MemoryRepresentation.Selected, Mode=OneWay, Converter={StaticResource NullToBool}}"/>
+                                     Text="{Binding Selected.Description, Mode=OneWay}"
+                                     IsEnabled="{Binding Selected, Mode=OneWay, Converter={StaticResource NullToBool}}"/>
                         </DockPanel>
 
                         <DockPanel Grid.Column="1" 

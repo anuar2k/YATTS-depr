@@ -1,62 +1,58 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using static YATTS.Helper;
+using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace YATTS {
     /// <summary>
     /// Logika interakcji dla klasy MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window, INotifyPropertyChanged {
-        public event PropertyChangedEventHandler PropertyChanged;
-        public MemoryRepresentation MemoryRepresentation { get; private set; }
-        private int index = 0;
+    public partial class MainWindow : Window {
+        private MemoryRepresentation MemoryRepresentation;
 
         public MainWindow() {
             InitializeComponent();
 
-            DataContext = this;
-
             MemoryRepresentation = new MemoryRepresentation();
+            DataContext = MemoryRepresentation;
 
             int sum = 0;
             MemoryRepresentation.StreamedVars.ForEach(var => {
                 sum += var.DataSize;
             });
 
-            MemoryRepresentation.EventVars.TruckData.ForEach(var => {
-                sum += var.DataSize;
-            });
-            MemoryRepresentation.EventVars.TrailerData.ForEach(var => {
-                sum += var.DataSize;
-            });
-            MemoryRepresentation.EventVars.JobData.ForEach(var => {
+            MemoryRepresentation.EventVariableList.EventVars.ForEach(var => {
                 sum += var.DataSize;
             });
 
             sum += 3; //new data available markers, see EventVariableList.cs
-            Debug.WriteLine(sum);
-
-            streamedListView.ItemsSource = MemoryRepresentation.StreamedVars;
-
-            Task.Factory.StartNew(() => {
-                bool go = true;
-                while(go) {
-                    Thread.Sleep(1000);
-                    MemoryRepresentation.Selected = MemoryRepresentation.StreamedVars[index++];
-                    if (index > 4) {
-                        go = false;
-                    }
-                }
-            });
+            Title = $"The MemoryRepresentation sum is {sum}";
         }
 
-        private void OnPropertyChanged(string propertyName) {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        private void streamedListView_SelectionChanged(object sender, SelectionChangedEventArgs e) {
+            MemoryRepresentation.Selected = (TelemVar)streamedListView.SelectedItem;
+            
+            eventListView.SelectionChanged -= eventListView_SelectionChanged;
+            eventListView.SelectedItem = null;
+            eventListView.SelectionChanged += eventListView_SelectionChanged;
+        }
+
+        private void eventListView_SelectionChanged(object sender, SelectionChangedEventArgs e) {
+            MemoryRepresentation.Selected = (TelemVar)eventListView.SelectedItem;
+
+            streamedListView.SelectionChanged -= streamedListView_SelectionChanged;
+            streamedListView.SelectedItem = null;
+            streamedListView.SelectionChanged += streamedListView_SelectionChanged;
+        }
+
+        private void ListViewItem_MouseDoubleClick(object sender, MouseButtonEventArgs e) {
+            if (MemoryRepresentation.Selected != null) {
+                MemoryRepresentation.Selected.Streamed = !MemoryRepresentation.Selected.Streamed;
+            }
         }
     }
 

@@ -1,12 +1,11 @@
 ﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO.MemoryMappedFiles;
 
 namespace YATTS {
     public class EventVariableList
     {
-        public List<TelemVar> TruckData;
-        public List<TelemVar> TrailerData;
-        public List<TelemVar> JobData;
+        public ObservableCollection<TelemVar> EventVars { get; set; }
 
         private U8TelemVar truckDataMarker;
         private byte lastTruckVal = 0;
@@ -17,15 +16,11 @@ namespace YATTS {
         private U8TelemVar jobDataMarker;
         private byte lastJobVal = 0;
 
-        public EventVariableList(List<TelemVar> TruckData, 
-                                List<TelemVar> TrailerData, 
-                                List<TelemVar> JobData,
+        public EventVariableList(ObservableCollection<TelemVar> EventVars, 
                                 U8TelemVar truckDataMarker,
                                 U8TelemVar trailerDataMarker,
                                 U8TelemVar jobDataMarker) {
-            this.TruckData = TruckData;
-            this.TrailerData = TrailerData;
-            this.JobData = JobData;
+            this.EventVars = EventVars;
             this.truckDataMarker = truckDataMarker;
             this.trailerDataMarker = trailerDataMarker;
             this.jobDataMarker = jobDataMarker;

@@ -85,6 +85,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Consts.cs" />
+    <Compile Include="ValueConverters\BoolToFontWeightConverter.cs" />
     <Compile Include="ValueConverters\ConvertTypeToRadioConverter.cs" />
     <Compile Include="ValueConverters\IsNullToBoolConverter.cs" />
     <Compile Include="MemoryRepresentation\DataStatus.cs" />
@@ -123,12 +124,13 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <None Include="app.config" />
-    <None Include="packages.config" />
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
-    <None Include="YATTS_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
