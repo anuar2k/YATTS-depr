@@ -11,7 +11,7 @@
         ResizeMode="CanMinimize">
     <Window.Resources>
         <local:IsNullToBoolConverter x:Key="NullToBool"/>
-        <local:ConvertTypeToRadioConverter x:Key="ConvertTypeToRadio"/>
+        <local:CastModeToRadioConverter x:Key="CastModeToRadio"/>
         <local:BoolToFontWeightConverter x:Key="BoolToFontWeight" />
         
         <Style TargetType="GridViewColumnHeader">
@@ -201,54 +201,69 @@
 
                             <DockPanel DockPanel.Dock="Top"
                                        Margin="0 5 0 0">
-                                <TextBlock Text="Stream first "/>
+                                <TextBlock Text="Stream first " VerticalAlignment="Center"/>
                                 <xctk:IntegerUpDown Value="{Binding Selected.ArrayLength}" 
                                                     Minimum="1"
                                                     Maximum="{Binding Selected.MaxArrayLength}"
                                                     IsEnabled="{Binding Selected, Mode=OneWay, Converter={StaticResource NullToBool}}"/>
-                                <TextBlock Text=" elements"/>
-                            </DockPanel>
-                            <TextBlock Text="Additional options for float type:"
-                                       Margin="0 3 0 5"
-                                       DockPanel.Dock="Top" />
-
-                            <DockPanel DockPanel.Dock="Top"
-                                       Margin="0 0 0 5">
-                                <TextBlock Text="Multiply by: "/>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="3*" />
-                                        <ColumnDefinition Width="2*" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBox Grid.Column="0"
-                                             Margin="2 0 4 0"
-                                             IsEnabled="{Binding SelectedFloat, Mode=OneWay, Converter={StaticResource NullToBool}}"/>
-                                    <Button Grid.Column="1"
-                                            Content="Multipliers"
-                                            IsEnabled="{Binding SelectedFloat, Mode=OneWay, Converter={StaticResource NullToBool}}"/>
-                                </Grid>
+                                <TextBlock Text=" elements" VerticalAlignment="Center"/>
                             </DockPanel>
 
-                            <RadioButton Content="Don't convert"
-                                         DockPanel.Dock="Top"
-                                         GroupName="A"
+                            <GroupBox Header="Additional options for float type:"
+                                      DockPanel.Dock="Top">
+                                <StackPanel>
+                                    <RadioButton Content="Don't convert"
+                                                 GroupName="CONVERT"
+                                                 IsEnabled="{Binding SelectedFloat, Mode=OneWay, Converter={StaticResource NullToBool}}"/>
+
+                                    <!-- Change this dirty margin/padding hack to StackPanel(RadioButton, Content) -->
+                                    <RadioButton GroupName="CONVERT"
+                                                 Margin="0 7 0 0"
+                                                 Padding="4 -2 0 0"
+                                                 IsEnabled="{Binding SelectedFloat, Mode=OneWay, Converter={StaticResource NullToBool}}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="Multiply this value by"
+                                                       Margin="0 0 4 0" VerticalAlignment="Center"/>
+                                            <TextBox Width="92"/>
+                                        </StackPanel>
+                                    </RadioButton>
+
+                                    <!-- Change this dirty margin/padding hack to StackPanel(RadioButton, Content) -->
+                                    <RadioButton GroupName="CONVERT"
+                                                 Margin="0 7 0 0"
+                                                 Padding="4 -4 0 0"
+                                                 IsEnabled="{Binding SelectedFloat, Mode=OneWay, Converter={StaticResource NullToBool}}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="Change the unit to"
+                                                       Margin="0 0 5 0" VerticalAlignment="Center"/>
+                                            <ComboBox Width="105" SelectedIndex="0"/>
+                                        </StackPanel>
+                                    </RadioButton>
+                                    
+                                    <Separator Margin="0 5"/>
+                                    
+                                    <RadioButton Content="Don't cast"
+                                         GroupName="CAST"
                                          IsEnabled="{Binding SelectedFloat, Mode=OneWay, Converter={StaticResource NullToBool}}"
-                                         IsChecked="{Binding SelectedFloat.ConvertToInt, Converter={StaticResource ConvertTypeToRadio}, ConverterParameter=NONE}"/>
-                            <RadioButton Content="Floor it and convert to int32"
-                                         DockPanel.Dock="Top"
-                                         GroupName="A"
+                                         IsChecked="{Binding SelectedFloat.CastToInt, Converter={StaticResource CastModeToRadio}, ConverterParameter=NONE}"/>
+                                    
+                                    <RadioButton Content="Floor this value and cast it to int32"
+                                         GroupName="CAST"
                                          IsEnabled="{Binding SelectedFloat, Mode=OneWay, Converter={StaticResource NullToBool}}"
-                                         IsChecked="{Binding SelectedFloat.ConvertToInt, Converter={StaticResource ConvertTypeToRadio}, ConverterParameter=FLOOR}"/>
-                            <RadioButton Content="Round it and convert to int32"
-                                         DockPanel.Dock="Top"
-                                         GroupName="A"
+                                         IsChecked="{Binding SelectedFloat.CastToInt, Converter={StaticResource CastModeToRadio}, ConverterParameter=FLOOR}"/>
+                                    
+                                    <RadioButton Content="Round this value and cast it to int32"
+                                         GroupName="CAST"
                                          IsEnabled="{Binding SelectedFloat, Mode=OneWay, Converter={StaticResource NullToBool}}"
-                                         IsChecked="{Binding SelectedFloat.ConvertToInt, Converter={StaticResource ConvertTypeToRadio}, ConverterParameter=ROUND}"/>
-                            <RadioButton Content="Ceil it and convert to int32"
-                                         DockPanel.Dock="Top"
-                                         GroupName="A"
+                                         IsChecked="{Binding SelectedFloat.CastToInt, Converter={StaticResource CastModeToRadio}, ConverterParameter=ROUND}"/>
+                                    
+                                    <RadioButton Content="Ceil this value and cast it to int32"
+                                         GroupName="CAST"
                                          IsEnabled="{Binding SelectedFloat, Mode=OneWay, Converter={StaticResource NullToBool}}"
-                                         IsChecked="{Binding SelectedFloat.ConvertToInt, Converter={StaticResource ConvertTypeToRadio}, ConverterParameter=CEIL}"/>
+                                         IsChecked="{Binding SelectedFloat.CastToInt, Converter={StaticResource CastModeToRadio}, ConverterParameter=CEIL}"/>
+
+                                </StackPanel>
+                            </GroupBox>
 
                             <TextBlock Text="Description:" Margin="0 5 0 0"
                                        DockPanel.Dock="Top"/>

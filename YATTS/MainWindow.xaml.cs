@@ -54,11 +54,15 @@ namespace YATTS {
                 MemoryRepresentation.Selected.Streamed = !MemoryRepresentation.Selected.Streamed;
             }
         }
+
+        private void ConvertButton_Click(object sender, RoutedEventArgs e) {
+
+        }
     }
 
     public static class Helper {
         public static void ForEach<T>(this IEnumerable<T> enumerable, Action<T> action) {
-            foreach(var cur in enumerable) {
+            foreach (var cur in enumerable) {
                 action(cur);
             }
         }

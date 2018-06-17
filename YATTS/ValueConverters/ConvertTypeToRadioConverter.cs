@@ -3,11 +3,11 @@ using System.Globalization;
 using System.Windows.Data;
 
 namespace YATTS {
-    class ConvertTypeToRadioConverter : IValueConverter {
+    class CastModeToRadioConverter : IValueConverter {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
-            if (value is ConvertType convertType) {
+            if (value is CastMode castMode) {
                 if (parameter is string strParameter) {
-                    if (convertType.ToString().Equals(strParameter, StringComparison.InvariantCultureIgnoreCase)) {
+                    if (castMode.ToString().Equals(strParameter, StringComparison.InvariantCultureIgnoreCase)) {
                         return true;
                     } else {
                         return false;

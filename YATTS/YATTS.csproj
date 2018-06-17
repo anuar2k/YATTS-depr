@@ -84,7 +84,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Consts.cs" />
+    <Compile Include="StaticClasses.cs" />
     <Compile Include="ValueConverters\BoolToFontWeightConverter.cs" />
     <Compile Include="ValueConverters\ConvertTypeToRadioConverter.cs" />
     <Compile Include="ValueConverters\IsNullToBoolConverter.cs" />
