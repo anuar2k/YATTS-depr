@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO.MemoryMappedFiles;
 using static System.BitConverter;
 
@@ -173,23 +174,64 @@ namespace YATTS {
     }
 
     public class FloatTelemVar : TelemVar {
-        public FloatTelemVar(string ID, string Name, string Description, string Category, long offset, int MaxArraySize = 1) : base(ID, Name, Description, Category, offset, MaxArraySize) {
-
+        public FloatTelemVar(string ID, string Name, string Description, string Category, long offset, Unit Unit, int MaxArraySize = 1) : base(ID, Name, Description, Category, offset, MaxArraySize) {
+            this.Unit = Unit;
         }
 
-        private bool convert = false;
-        private Func<float, float> _Converter = null;
-        public Func<float, float> Converter {
+        private float? _Multiplier = null;
+        public float? Multiplier {
             get {
-                return _Converter;
+                return _Multiplier;
             }
             set {
-                convert = value == null ? false : true;
-                _Converter = value;
+                if (value != _Multiplier) {
+                    _Multiplier = value;
+                    OnPropertyChanged(nameof(TypeName));
+                }
             }
         }
 
-        public CastMode _CastToInt = CastMode.NONE;
+        public Unit Unit { get; }
+
+        private Func<float, float> converterFunc;
+        private Unit _TargetUnit = Unit.NULL;
+        public Unit TargetUnit {
+            get {
+                return _TargetUnit;
+            }
+            set {
+                if (value != _TargetUnit) {
+                    _TargetUnit = value;
+                    OnPropertyChanged(nameof(TargetUnit));
+                    if (value == Unit.NULL || value == Unit.NONE) {
+                        converterFunc = null;
+                    } else {
+                        converterFunc = Converters.ConverterDictionary[Unit][value];
+                    }
+                }
+            }
+        }
+
+        private ConvertMode _ConvertMode = ConvertMode.NONE;
+        public ConvertMode ConvertMode {
+            get {
+                return _ConvertMode;
+            }
+            set {
+                if (value != _ConvertMode) {
+                    _ConvertMode = value;
+                    OnPropertyChanged(nameof(ConvertMode));
+                    if (value != ConvertMode.CHANGE_UNIT) {
+                        TargetUnit = Unit.NULL;
+                    }
+                    if (value != ConvertMode.MULTIPLY) {
+                        Multiplier = null;
+                    }
+                }
+            }
+        }
+
+        private CastMode _CastToInt = CastMode.NONE;
         public CastMode CastToInt {
             get {
                 return _CastToInt;
@@ -225,32 +267,37 @@ namespace YATTS {
             byte[] value = new byte[DataSize];
             source.ReadArray(Offset, value, 0, DataSize);
 
-            if (convert) {
+            if (_ConvertMode != ConvertMode.NONE) {
                 for (int i = 0; i < ArrayLength; i++) {
                     float temp = ToSingle(value, i * ElementSize);
-                    temp = Converter(temp);
+                    if (_ConvertMode == ConvertMode.MULTIPLY) {
+                        temp *= (float)_Multiplier;
+                    }
+                    if (_ConvertMode == ConvertMode.CHANGE_UNIT) {
+                        temp = converterFunc(temp);
+                    }
                     byte[] newValue = GetBytes(temp);
                     Array.Copy(newValue, 0, value, i * ElementSize, ElementSize);
                 }
             }
             
 
-            if (CastToInt != CastMode.NONE) {
+            if (_CastToInt != CastMode.NONE) {
                 for (int i = 0; i < ArrayLength; i++) {
                     float temp = ToSingle(value, i * ElementSize);
-                    int convertedTemp = 0;
-                    switch (CastToInt) {
+                    int castedTemp = 0;
+                    switch (_CastToInt) {
                         case CastMode.FLOOR:
-                            convertedTemp = (int)Math.Floor(temp);
+                            castedTemp = (int)Math.Floor(temp);
                             break;
                         case CastMode.ROUND:
-                            convertedTemp = (int)Math.Round(temp);
+                            castedTemp = (int)Math.Round(temp);
                             break;
                         case CastMode.CEIL:
-                            convertedTemp = (int)Math.Ceiling(temp);
+                            castedTemp = (int)Math.Ceiling(temp);
                             break;
                     }
-                    byte[] newValue = GetBytes(convertedTemp);
+                    byte[] newValue = GetBytes(castedTemp);
                     Array.Copy(newValue, 0, value, i * ElementSize, ElementSize);
                 }
             }

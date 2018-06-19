@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace YATTS {
     public static class Consts {
@@ -26,19 +27,64 @@ namespace YATTS {
     }
 
     public static class Converters {
-        public static Func<float, float> MStoKMH = val => val * 3.6f;
-        public static Func<float, float> MStoMPH = val => val * 2.23693629f;
+        public static Dictionary<Unit, Dictionary<Unit, Func<float, float>>> ConverterDictionary = new Dictionary<Unit, Dictionary<Unit, Func<float, float>>>() {
+            {
+                Unit.NULL, null
+            },
+            {
+                Unit.NONE, null
+            },
+            {
+                Unit.MS, new Dictionary<Unit, Func<float, float>>() {
+                    {Unit.KMH, val => val * 3.6f },
+                    {Unit.MPH, val => val * 2.23693629f }
+                }
+            },
+            {
+                Unit.PSI, new Dictionary<Unit, Func<float, float>>() {
+                    {Unit.MPA, val => val * 0.00689476f },
+                    {Unit.BAR, val => val * 0.06894757f }
+                }
+            },
+            {
+                Unit.C, new Dictionary<Unit, Func<float, float>>() {
+                    {Unit.F, val => (val * 1.8f) + 32f },
+                    {Unit.K, val => val + 273f }
+                }
+            },
+            {
+                Unit.L, new Dictionary<Unit, Func<float, float>>() {
+                    {Unit.GAL, val => val * 0.26417205f }
+                }
+            },
+            {
+                Unit.KM, new Dictionary<Unit, Func<float, float>>() {
+                    {Unit.MI, val => val * 0.62137119f }
+                }
+            },
+            {
+                Unit.L100KM, new Dictionary<Unit, Func<float, float>>() {
+                    {Unit.MPH, val => 235.21f / val }
+                }
+            }
+        };
+    }
+    
+    public enum Unit {
+        NULL,
+        NONE,
+        MS, KMH, MPH,
+        PSI, MPA, BAR,
+        C, F, K,
+        L, GAL,
+        KM, MI,
+        L100KM, MPG
+    }
 
-        public static Func<float, float> PSItoMPA = val => val * 0.00689476f;
-        public static Func<float, float> PSItoBAR = val => val * 0.06894757f;
-
-        public static Func<float, float> CtoF = val => (val * 1.8f) + 32f;
-        public static Func<float, float> CtoK = val => val + 273f;
-
-        public static Func<float, float> LtoGAL = val => val * 0.26417205f;
-
-        public static Func<float, float> KMtoMI = val => val * 0.62137119f;
-        public static Func<float, float> L100KMtoMPG = val => 235.21f / val;
+    public enum ConvertMode {
+        NONE,
+        MULTIPLY,
+        CHANGE_UNIT
     }
 
     public enum CastMode {
@@ -46,15 +92,5 @@ namespace YATTS {
         FLOOR,
         ROUND,
         CEIL
-    }
-
-    public enum Unit {
-        NONE,
-        MS,
-        PSI,
-        C,
-        L,
-        KM,
-        L100KM
     }
 }

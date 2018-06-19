@@ -3,11 +3,11 @@ using System.Globalization;
 using System.Windows.Data;
 
 namespace YATTS {
-    class CastModeToRadioConverter : IValueConverter {
+    class EnumToRadioConverter : IValueConverter {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
-            if (value is CastMode castMode) {
+            if (value is Enum enumeration) {
                 if (parameter is string strParameter) {
-                    if (castMode.ToString().Equals(strParameter, StringComparison.InvariantCultureIgnoreCase)) {
+                    if (enumeration.ToString().Equals(strParameter, StringComparison.InvariantCultureIgnoreCase)) {
                         return true;
                     } else {
                         return false;
