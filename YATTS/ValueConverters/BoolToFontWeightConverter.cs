@@ -8,7 +8,8 @@ namespace YATTS {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
             if (value is bool boolValue) {
                 return boolValue ? FontWeights.Bold : FontWeights.Normal;
-            } else {
+            }
+            else {
                 return FontWeights.Normal;
             }
         }

@@ -91,10 +91,10 @@
     <Compile Include="ValueConverters\BoolToFontWeightConverter.cs" />
     <Compile Include="ValueConverters\EnumToRadioConverter.cs" />
     <Compile Include="ValueConverters\IsNullToBoolConverter.cs" />
-    <Compile Include="MemoryRepresentation\DataStatus.cs" />
     <Compile Include="MemoryRepresentation\EventVariableList.cs" />
     <Compile Include="MemoryRepresentation\TelemVar.cs" />
     <Compile Include="MemoryRepresentation\MemoryRepresentation.cs" />
+    <Compile Include="ValueConverters\TelemVarToQuantityConverter.cs" />
     <Compile Include="ValueConverters\UnitToEnabledConverter.cs" />
     <Compile Include="ValueConverters\UnitToConvertersConverter.cs" />
     <Page Include="MainWindow.xaml">

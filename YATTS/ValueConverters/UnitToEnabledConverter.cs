@@ -8,10 +8,12 @@ namespace YATTS {
             if (value is Unit unit) {
                 if (unit == Unit.NONE || unit == Unit.NULL) {
                     return false;
-                } else {
+                }
+                else {
                     return true;
                 }
-            } else {
+            }
+            else {
                 return false;
             }
         }

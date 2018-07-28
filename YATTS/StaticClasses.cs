@@ -69,7 +69,7 @@ namespace YATTS {
             }
         };
     }
-    
+
     public enum Unit {
         NULL,
         NONE,

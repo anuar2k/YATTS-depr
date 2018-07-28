@@ -1,13 +1,15 @@
-﻿using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
-using static YATTS.Consts;
+using System.IO.MemoryMappedFiles;
 using static YATTS.Categories;
+using static YATTS.Consts;
 
 namespace YATTS {
     public class MemoryRepresentation : INotifyPropertyChanged {
         public ObservableCollection<TelemVar> StreamedVars { get; private set; }
         public EventVariableList EventVariableList { get; private set; }
+        public MemoryMappedFile MMF { get; private set; }
+        public MemoryMappedViewAccessor MMVA { get; private set; }
 
         private TelemVar _Selected;
         public TelemVar Selected {
@@ -42,7 +44,7 @@ namespace YATTS {
                 new U32TelemVar("game", "", "", GAME_INFO, 4),
                 new U32TelemVar("sdk_version", "", "", GAME_INFO, 8),
                 new BoolTelemVar("paused", "", "", GAME_INFO, 12),
-                new FloatTelemVar("g_local_scale", "", "", GAME_INFO, 13, Unit.NONE, 8),
+                new FloatTelemVar("g_local_scale", "", "", GAME_INFO, 13, Unit.NONE),
                 new U32TelemVar("g_game_time", "", "", GAME_INFO, 17),
                 new S32TelemVar("g_next_rest_stop", "", "", GAME_INFO, 21),
                 new DPlacementTelemVar("t_world_placement", "", "", POSITION, 25),
@@ -136,10 +138,10 @@ namespace YATTS {
             };
 
             ObservableCollection<TelemVar> EventVars = new ObservableCollection<TelemVar>() {
-                new ASCIITelemVar("ct_brand_id", "", "", TRUCK, 927),
-                new ASCIITelemVar("ct_brand", "", "", TRUCK, 991),
-                new ASCIITelemVar("ct_id", "", "", TRUCK, 1055),
-                new ASCIITelemVar("ct_name", "", "", TRUCK, 1119),
+                new StringTelemVar("ct_brand_id", "", "", TRUCK, 927),
+                new StringTelemVar("ct_brand", "", "", TRUCK, 991),
+                new StringTelemVar("ct_id", "", "", TRUCK, 1055),
+                new StringTelemVar("ct_name", "", "", TRUCK, 1119),
                 new FloatTelemVar("ct_fuel_capacity", "", "", TRUCK, 1119, Unit.L),
                 new FloatTelemVar("ct_fuel_warning_factor", "", "", TRUCK, 1183, Unit.L),
                 new FloatTelemVar("ct_adblue_capacity", "", "", TRUCK, 1187, Unit.L),
@@ -166,8 +168,8 @@ namespace YATTS {
                 new BoolTelemVar("ct_wheel_liftable", "", "", TRUCK, 1431, TRUCK_WHEEL_COUNT),
                 new FloatTelemVar("ct_forward_ratio", "", "", TRUCK, 1439, Unit.NONE, FWD_GEAR_COUNT),
                 new FloatTelemVar("ct_reverse_ratio", "", "", TRUCK, 1567, Unit.NONE, RVS_GEAR_COUNT),
-                new ASCIITelemVar("cr_id", "", "", TRAILER, 1631),
-                new ASCIITelemVar("cr_cargo_accessory_id", "", "", TRAILER, 1695),
+                new StringTelemVar("cr_id", "", "", TRAILER, 1631),
+                new StringTelemVar("cr_cargo_accessory_id", "", "", TRAILER, 1695),
                 new FVectorTelemVar("cr_hook_position", "", "", TRAILER, 1759),
                 new U32TelemVar("cr_wheel_count", "", "", TRAILER, 1771),
                 new FVectorTelemVar("cr_wheel_position", "", "", TRAILER, 1775, TRAILER_WHEEL_COUNT),
@@ -176,17 +178,17 @@ namespace YATTS {
                 new FloatTelemVar("cr_wheel_radius", "", "", TRAILER, 1999, Unit.NONE, TRAILER_WHEEL_COUNT),
                 new BoolTelemVar("cr_wheel_powered", "", "", TRAILER, 2063, TRAILER_WHEEL_COUNT),
                 new BoolTelemVar("cr_wheel_liftable", "", "", TRAILER, 2079, TRAILER_WHEEL_COUNT),
-                new ASCIITelemVar("cj_cargo_id", "", "", JOB, 2095),
-                new ASCIITelemVar("cj_cargo", "", "", JOB, 2159),
+                new StringTelemVar("cj_cargo_id", "", "", JOB, 2095),
+                new StringTelemVar("cj_cargo", "", "", JOB, 2159),
                 new FloatTelemVar("cj_cargo_mass", "", "", JOB, 2223, Unit.NONE), //not sure bout this one - need a mass unit
-                new ASCIITelemVar("cj_destination_city_id", "", "", JOB, 2227),
-                new ASCIITelemVar("cj_destination_city", "", "", JOB, 2291),
-                new ASCIITelemVar("cj_destination_company_id", "", "", JOB, 2355),
-                new ASCIITelemVar("cj_destination_company", "", "", JOB, 2419),
-                new ASCIITelemVar("cj_source_city_id", "", "", JOB, 2483),
-                new ASCIITelemVar("cj_source_city", "", "", JOB, 2547),
-                new ASCIITelemVar("cj_source_company_id", "", "", JOB, 2611),
-                new ASCIITelemVar("cj_source_company", "", "", JOB, 2675),
+                new StringTelemVar("cj_destination_city_id", "", "", JOB, 2227),
+                new StringTelemVar("cj_destination_city", "", "", JOB, 2291),
+                new StringTelemVar("cj_destination_company_id", "", "", JOB, 2355),
+                new StringTelemVar("cj_destination_company", "", "", JOB, 2419),
+                new StringTelemVar("cj_source_city_id", "", "", JOB, 2483),
+                new StringTelemVar("cj_source_city", "", "", JOB, 2547),
+                new StringTelemVar("cj_source_company_id", "", "", JOB, 2611),
+                new StringTelemVar("cj_source_company", "", "", JOB, 2675),
                 new U64TelemVar("cj_income", "", "", JOB, 2739),
                 new U32TelemVar("cj_delivery_time", "", "", JOB, 2747)
             };
@@ -196,6 +198,11 @@ namespace YATTS {
             U8TelemVar jobDataMarker = new U8TelemVar(null, null, null, null, 926);
 
             EventVariableList = new EventVariableList(EventVars, truckDataMarker, trailerDataMarker, jobDataMarker);
+        }
+
+        public void Hook() {
+            MMF = MemoryMappedFile.OpenExisting("Local\\YATTS_MMF");
+            MMVA = MMF.CreateViewAccessor();
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

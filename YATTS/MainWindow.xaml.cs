@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -35,7 +34,7 @@ namespace YATTS {
 
         private void streamedListView_SelectionChanged(object sender, SelectionChangedEventArgs e) {
             MemoryRepresentation.Selected = (TelemVar)streamedListView.SelectedItem;
-            
+
             eventListView.SelectionChanged -= eventListView_SelectionChanged;
             eventListView.SelectedItem = null;
             eventListView.SelectionChanged += eventListView_SelectionChanged;
@@ -57,6 +56,26 @@ namespace YATTS {
 
         private void ConvertButton_Click(object sender, RoutedEventArgs e) {
 
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e) {
+            MemoryRepresentation.Hook();
+            Task.Factory.StartNew(() => {
+                while (true) {
+                    if (MemoryRepresentation.Selected != null) {
+                        string text = MemoryRepresentation.Selected.GetStringValue(MemoryRepresentation.MMVA);
+                        valueTextBox.Dispatcher.Invoke(new Action(() => {
+                            valueTextBox.Text = text;
+                        }));
+                    }
+                    else {
+                        valueTextBox.Dispatcher.Invoke(new Action(() => {
+                            valueTextBox.Text = String.Empty;
+                        }));
+                    }
+                    Thread.Sleep(100);
+                }
+            });
         }
     }
 

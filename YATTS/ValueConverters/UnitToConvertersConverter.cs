@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
 using System.Windows.Data;
 
 namespace YATTS {
@@ -11,10 +8,12 @@ namespace YATTS {
             if (value is Unit unit) {
                 if (unit == Unit.NONE || unit == Unit.NULL) {
                     return null;
-                } else {
+                }
+                else {
                     return Converters.ConverterDictionary[unit].Keys;
                 }
-            } else {
+            }
+            else {
                 return null;
             }
         }

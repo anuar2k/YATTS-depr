@@ -9,13 +9,16 @@ namespace YATTS {
                 if (parameter is string strParameter) {
                     if (enumeration.ToString().Equals(strParameter, StringComparison.InvariantCultureIgnoreCase)) {
                         return true;
-                    } else {
+                    }
+                    else {
                         return false;
                     }
-                } else {
+                }
+                else {
                     return false;
                 }
-            } else {
+            }
+            else {
                 return false;
             }
         }
@@ -25,13 +28,16 @@ namespace YATTS {
                 if (boolValue) {
                     if (parameter is string strParameter) {
                         return Enum.Parse(targetType, strParameter, true);
-                    } else {
+                    }
+                    else {
                         return Binding.DoNothing;
                     }
-                } else {
+                }
+                else {
                     return Binding.DoNothing;
                 }
-            } else {
+            }
+            else {
                 return Binding.DoNothing;
             }
         }
