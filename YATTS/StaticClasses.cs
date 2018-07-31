@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace YATTS {
     public static class Consts {
         public static int
             TRUCK_WHEEL_COUNT = 8,
             TRAILER_WHEEL_COUNT = 16,
-            FWD_GEAR_COUNT = 16,
-            RVS_GEAR_COUNT = 32;
+            FWD_GEAR_COUNT = 32,
+            RVS_GEAR_COUNT = 16;
     }
 
     public static class Categories {
@@ -26,11 +27,16 @@ namespace YATTS {
             JOB = "Job";
     }
 
+    public static class Extensions {
+        public static byte[] ToArrayAndClear(this MemoryStream memoryStream) {
+            byte[] value = memoryStream.ToArray();
+            memoryStream.Position = 0;
+            memoryStream.SetLength(0);
+            return value;
+        }
+    }
     public static class Converters {
         public static Dictionary<Unit, Dictionary<Unit, Func<float, float>>> ConverterDictionary = new Dictionary<Unit, Dictionary<Unit, Func<float, float>>>() {
-            {
-                Unit.NULL, null
-            },
             {
                 Unit.NONE, null
             },
@@ -71,7 +77,6 @@ namespace YATTS {
     }
 
     public enum Unit {
-        NULL,
         NONE,
         MS, KMH, MPH,
         PSI, MPA, BAR,

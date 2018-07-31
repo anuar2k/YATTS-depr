@@ -87,6 +87,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="MemoryRepresentation\ByteBuffer.cs" />
     <Compile Include="StaticClasses.cs" />
     <Compile Include="ValueConverters\BoolToFontWeightConverter.cs" />
     <Compile Include="ValueConverters\EnumToRadioConverter.cs" />

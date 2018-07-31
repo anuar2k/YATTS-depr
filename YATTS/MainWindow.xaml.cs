@@ -38,6 +38,7 @@ namespace YATTS {
             eventListView.SelectionChanged -= eventListView_SelectionChanged;
             eventListView.SelectedItem = null;
             eventListView.SelectionChanged += eventListView_SelectionChanged;
+            UpdateValue();
         }
 
         private void eventListView_SelectionChanged(object sender, SelectionChangedEventArgs e) {
@@ -46,6 +47,7 @@ namespace YATTS {
             streamedListView.SelectionChanged -= streamedListView_SelectionChanged;
             streamedListView.SelectedItem = null;
             streamedListView.SelectionChanged += streamedListView_SelectionChanged;
+            UpdateValue();
         }
 
         private void ListViewItem_MouseDoubleClick(object sender, MouseButtonEventArgs e) {
@@ -62,20 +64,22 @@ namespace YATTS {
             MemoryRepresentation.Hook();
             Task.Factory.StartNew(() => {
                 while (true) {
-                    if (MemoryRepresentation.Selected != null) {
-                        string text = MemoryRepresentation.Selected.GetStringValue(MemoryRepresentation.MMVA);
-                        valueTextBox.Dispatcher.Invoke(new Action(() => {
-                            valueTextBox.Text = text;
-                        }));
-                    }
-                    else {
-                        valueTextBox.Dispatcher.Invoke(new Action(() => {
-                            valueTextBox.Text = String.Empty;
-                        }));
-                    }
+                    Dispatcher.Invoke(new Action(UpdateValue));
                     Thread.Sleep(100);
                 }
             });
+        }
+
+        private void UpdateValue() {
+            if (MemoryRepresentation.Selected != null) {
+                if (MemoryRepresentation.MMVA?.CanRead ?? false) {
+                    string text = MemoryRepresentation.Selected.GetStringValue(MemoryRepresentation.MMVA);
+                    valueTextBox.Text = text;
+                }
+            }
+            else {
+                valueTextBox.Text = String.Empty;
+            }
         }
     }
 

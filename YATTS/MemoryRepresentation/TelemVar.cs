@@ -1,7 +1,10 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO.MemoryMappedFiles;
+using System.Linq;
 using static System.BitConverter;
+using static System.Text.Encoding;
 
 namespace YATTS {
     public abstract class TelemVar : INotifyPropertyChanged {
@@ -48,7 +51,7 @@ namespace YATTS {
         }
 
         private int _ArrayLength;
-        public int ArrayLength {
+        public virtual int ArrayLength {
             get {
                 return _ArrayLength;
             }
@@ -71,7 +74,7 @@ namespace YATTS {
             get {
                 return _DataSize;
             }
-            set {
+            private set {
                 if (value != _DataSize) {
                     _DataSize = value;
                     OnPropertyChanged(nameof(DataSize));
@@ -85,16 +88,11 @@ namespace YATTS {
                     return BasicTypeName;
                 }
                 else {
-                    if (ArrayLength == MaxArrayLength) {
-                        return $"{BasicTypeName}[{MaxArrayLength}]";
+                    if (ArrayLength == 1) {
+                        return $"{BasicTypeName}[{MaxArrayLength}] -> {BasicTypeName}";
                     }
                     else {
-                        if (ArrayLength == 1) {
-                            return $"{BasicTypeName}[{MaxArrayLength}] -> {BasicTypeName}";
-                        }
-                        else {
-                            return $"{BasicTypeName}[{MaxArrayLength}] -> {BasicTypeName}[{ArrayLength}]";
-                        }
+                        return $"{BasicTypeName}[{MaxArrayLength}] -> {BasicTypeName}[{ArrayLength}]";
                     }
                 }
             }
@@ -105,6 +103,7 @@ namespace YATTS {
             byte[] value = new byte[bytesToRead];
             source.ReadArray(Position, value, 0, bytesToRead);
             return value;
+
         }
 
         public abstract string GetStringValue(MemoryMappedViewAccessor source);
@@ -112,6 +111,78 @@ namespace YATTS {
         public event PropertyChangedEventHandler PropertyChanged;
         public void OnPropertyChanged(string sender) {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(sender));
+        }
+    }
+
+    //TODO: TAKE CARE OF STRINGVALUE IN ALL INHERENTS
+    public abstract class StringableTelemVar : TelemVar {
+        public StringableTelemVar(string ID, string Name, string Description, string Category, long Position, int MaxArrayLength = 1) : base(ID, Name, Description, Category, Position, MaxArrayLength) {
+
+        }
+
+        private bool _Stringify = false;
+        public bool Stringify {
+            get {
+                return _Stringify;
+            }
+            set {
+                if (value != _Stringify) {
+                    _Stringify = value;
+                    if (value) {
+                        GenerateStringifyBuffer();
+                    }
+                    else {
+                        StringifyBuffer = null;
+                    }
+                }
+            }
+        }
+
+        protected abstract int MaxStringifiedElementLength { get; }
+
+        protected ByteBuffer StringifyBuffer { get; private set; }
+        private void GenerateStringifyBuffer() {
+            int length = MaxStringifiedElementLength * ArrayLength;
+            if (StringifyBuffer != null) {
+                StringifyBuffer.Length = length;
+            } else {
+                StringifyBuffer = new ByteBuffer(length);
+            }
+        }
+
+        public override int ArrayLength {
+            get {
+                return base.ArrayLength;
+            }
+            set {
+                if (value != base.ArrayLength) {
+                    base.ArrayLength = value;
+                    if (Stringify) {
+                        GenerateStringifyBuffer();
+                    }
+                }
+            }
+        }
+
+        public override string TypeName {
+            get {
+                if (Stringify) {
+                    if (MaxArrayLength == 1) {
+                        return $"{BasicTypeName} -> char[]";
+                    }
+                    else {
+                        if (ArrayLength == 1) {
+                            return $"{BasicTypeName}[{MaxArrayLength}] -> char[]";
+                        }
+                        else {
+                            return $"{BasicTypeName}[{MaxArrayLength}] -> char[{ArrayLength}][]";
+                        }
+                    }
+                }
+                else {
+                    return base.TypeName;
+                }
+            }
         }
     }
 
@@ -140,13 +211,36 @@ namespace YATTS {
 
     }
 
-    public class U8TelemVar : TelemVar {
+    public class U8TelemVar : StringableTelemVar {
         public U8TelemVar(string ID, string Name, string Description, string Category, long Position, int MaxArraySize = 1) : base(ID, Name, Description, Category, Position, MaxArraySize) {
 
         }
 
         public override int ElementSize => 1;
         public override string BasicTypeName => "byte";
+        protected override int MaxStringifiedElementLength => 4; //1 length + 3 data
+
+        public override byte[] GetByteValue(MemoryMappedViewAccessor source, bool wholeArray) {
+            byte[] value = base.GetByteValue(source, wholeArray);
+
+            if (Stringify) {
+                int elemsToRead = wholeArray ? MaxArrayLength : ArrayLength;
+
+                for (int i = 0; i < elemsToRead; i++) {
+                    string stringified = value[i].ToString(CultureInfo.InvariantCulture);
+                    byte[] buffer = new byte[stringified.Length + 1];
+                    buffer[0] = (byte)stringified.Length;
+                    ASCII.GetBytes(stringified, 0, stringified.Length, buffer, 1);
+
+                    StringifyBuffer.Append(buffer);
+                }
+
+                return StringifyBuffer.Flush();
+            }
+            else {
+                return value;
+            }
+        }
 
         public override string GetStringValue(MemoryMappedViewAccessor source) {
             byte[] value = GetByteValue(source, true);
@@ -164,13 +258,34 @@ namespace YATTS {
         }
     }
 
-    public class U32TelemVar : TelemVar {
+    public class U32TelemVar : StringableTelemVar {
         public U32TelemVar(string ID, string Name, string Description, string Category, long Position, int MaxArraySize = 1) : base(ID, Name, Description, Category, Position, MaxArraySize) {
 
         }
 
         public override int ElementSize => 4;
         public override string BasicTypeName => "uint32_t";
+        protected override int MaxStringifiedElementLength => 11; //1 length + 10 data
+
+        public override byte[] GetByteValue(MemoryMappedViewAccessor source, bool wholeArray) {
+            byte[] value = base.GetByteValue(source, wholeArray);
+
+            if (Stringify) {
+                int elemsToRead = wholeArray ? MaxArrayLength : ArrayLength;
+                for (int i = 0; i < elemsToRead; i++) {
+                    string stringified = ToUInt32(value, i * ElementSize).ToString(CultureInfo.InvariantCulture);
+                    byte[] buffer = new byte[stringified.Length + 1];
+                    buffer[0] = (byte)stringified.Length;
+                    ASCII.GetBytes(stringified, 0, stringified.Length, buffer, 1);
+
+                    StringifyBuffer.Append(buffer);
+                }
+                return StringifyBuffer.Flush();
+            }
+            else {
+                return value;
+            }
+        }
 
         public override string GetStringValue(MemoryMappedViewAccessor source) {
             byte[] value = GetByteValue(source, true);
@@ -188,19 +303,40 @@ namespace YATTS {
         }
     }
 
-    public class S32TelemVar : TelemVar {
+    public class S32TelemVar : StringableTelemVar {
         public S32TelemVar(string ID, string Name, string Description, string Category, long Position, int MaxArraySize = 1) : base(ID, Name, Description, Category, Position, MaxArraySize) {
 
         }
 
         public override int ElementSize => 4;
         public override string BasicTypeName => "int32_t";
+        protected override int MaxStringifiedElementLength => 12; //1 length + 11 data
+
+        public override byte[] GetByteValue(MemoryMappedViewAccessor source, bool wholeArray) {
+            byte[] value = base.GetByteValue(source, wholeArray);
+
+            if (Stringify) {
+                int elemsToRead = wholeArray ? MaxArrayLength : ArrayLength;
+                for (int i = 0; i < elemsToRead; i++) {
+                    string stringified = ToInt32(value, i * ElementSize).ToString(CultureInfo.InvariantCulture);
+                    byte[] buffer = new byte[stringified.Length + 1];
+                    buffer[0] = (byte)stringified.Length;
+                    ASCII.GetBytes(stringified, 0, stringified.Length, buffer, 1);
+
+                    StringifyBuffer.Append(buffer);
+                }
+                return StringifyBuffer.Flush();
+            }
+            else {
+                return value;
+            }
+        }
 
         public override string GetStringValue(MemoryMappedViewAccessor source) {
             byte[] value = GetByteValue(source, true);
 
             if (MaxArrayLength == 1) {
-                return $"{ToSingle(value, 0)}\r\n";
+                return $"{ToInt32(value, 0)}\r\n";
             }
             else {
                 string result = string.Empty;
@@ -212,9 +348,11 @@ namespace YATTS {
         }
     }
 
-    public class FloatTelemVar : TelemVar {
+    //TODO: Provide GetByteValue and TypeName
+    public class FloatTelemVar : StringableTelemVar {
         public FloatTelemVar(string ID, string Name, string Description, string Category, long Position, Unit Unit, int MaxArraySize = 1) : base(ID, Name, Description, Category, Position, MaxArraySize) {
             this.Unit = Unit;
+            UpdateStringifyFormat();
         }
 
         private float? _Multiplier = null;
@@ -233,7 +371,7 @@ namespace YATTS {
         public Unit Unit { get; }
 
         private Func<float, float> converterFunc;
-        private Unit _TargetUnit = Unit.NULL;
+        private Unit _TargetUnit = Unit.NONE;
         public Unit TargetUnit {
             get {
                 return _TargetUnit;
@@ -243,7 +381,7 @@ namespace YATTS {
                     _TargetUnit = value;
                     OnPropertyChanged(nameof(TargetUnit));
 
-                    if (value == Unit.NULL || value == Unit.NONE) {
+                    if (value == Unit.NONE) {
                         converterFunc = null;
                     }
                     else {
@@ -264,7 +402,7 @@ namespace YATTS {
                     OnPropertyChanged(nameof(ConvertMode));
 
                     if (value != ConvertMode.CHANGE_UNIT) {
-                        TargetUnit = Unit.NULL;
+                        TargetUnit = Unit.NONE;
                     }
                     if (value != ConvertMode.MULTIPLY) {
                         Multiplier = null;
@@ -288,28 +426,46 @@ namespace YATTS {
 
         public override int ElementSize => 4;
         public override string BasicTypeName => "float";
+        protected override int MaxStringifiedElementLength => 21; //1 length + 1 sign + 10 integer data + 1 length + 8 decimal fraction = 21
         public override string TypeName {
             get {
-                if (CastToInt != CastMode.NONE) {
+                if (Stringify || CastToInt == CastMode.NONE) {
+                    return base.TypeName;
+                } else {
                     if (MaxArrayLength == 1) {
                         return "float -> int32_t";
                     }
                     else {
-                        if (ArrayLength == MaxArrayLength) {
-                            return $"float[{MaxArrayLength}] -> int32_t[{MaxArrayLength}]";
+                        if (ArrayLength == 1) {
+                            return $"float[{MaxArrayLength}] -> int32_t";
                         }
                         else {
-                            if (ArrayLength == 1) {
-                                return $"float[{MaxArrayLength}] -> int32_t";
-                            }
-                            else {
-                                return $"float[{MaxArrayLength}] -> int32_t[{ArrayLength}]";
-                            }
+                            return $"float[{MaxArrayLength}] -> int32_t[{ArrayLength}]";
                         }
                     }
                 }
-                else {
-                    return base.TypeName;
+            }
+        }
+
+        private string StringifyFormat;
+        private void UpdateStringifyFormat() {
+            string format = "0.";
+            for (int i = 0; i < _DecimalLength; i++) {
+                format += '#';
+            }
+            StringifyFormat = format;
+        }
+
+        private int _DecimalLength = 2;
+        public int DecimalLength {
+            get {
+                return _DecimalLength;
+            }
+            set {
+                if (value != _DecimalLength) {
+                    _DecimalLength = value;
+                    OnPropertyChanged(nameof(DecimalLength));
+                    UpdateStringifyFormat();
                 }
             }
         }
@@ -330,7 +486,9 @@ namespace YATTS {
                         }
                     }
                     if (_ConvertMode == ConvertMode.CHANGE_UNIT) {
-                        temp = converterFunc(temp);
+                        if (converterFunc != null) {
+                            temp = converterFunc(temp);
+                        }
                     }
                     byte[] newValue = GetBytes(temp);
                     Array.Copy(newValue, 0, value, i * ElementSize, ElementSize);
@@ -357,32 +515,116 @@ namespace YATTS {
                 }
             }
 
+            if (Stringify) {
+                for (int i = 0; i < elemsToRead; i++) {
+                    byte[] buffer;
+                    if (_CastToInt == CastMode.NONE) {
+                        string stringified = ToSingle(value, i * ElementSize).ToString(StringifyFormat, CultureInfo.InvariantCulture);
+                        if (_DecimalLength > 0) {
+                            if (stringified.IndexOf('.') != -1) {
+                                string[] parts = stringified.Split('.');
+                                if (parts[0].Length > 11 || parts[1].Length > 8) {
+                                    buffer = ASCII.GetBytes(new string('#', 21));
+                                    buffer[0] = 11;
+                                    buffer[12] = 8;
+                                }
+                                else {
+                                    buffer = new byte[parts[0].Length + parts[1].Length + 2];
+
+                                    buffer[0] = (byte)parts[0].Length;
+                                    ASCII.GetBytes(parts[0], 0, parts[0].Length, buffer, 1);
+
+                                    buffer[parts[0].Length + 1] = (byte)parts[1].Length;
+                                    ASCII.GetBytes(parts[1], 0, parts[1].Length, buffer, parts[0].Length + 2);
+                                }
+                            }
+                            else {
+
+                            }
+                        }
+                        else {
+
+                        }
+                    }
+                    else {
+                        string stringified = ToInt32(value, i * ElementSize).ToString(CultureInfo.InvariantCulture);
+                        buffer = new byte[stringified.Length + 1];
+                        buffer[0] = (byte)stringified.Length;
+                        ASCII.GetBytes(stringified, 0, stringified.Length, buffer, 1);
+                    }
+
+                    StringifyBuffer.Append(buffer);
+                }
+
+                return StringifyBuffer.Flush();
+            }
+
             return value;
         }
 
         public override string GetStringValue(MemoryMappedViewAccessor source) {
-            byte[] value = GetByteValue(source, true);
+            if (_ConvertMode == ConvertMode.NONE && _CastToInt == CastMode.NONE) {
+                byte[] value = base.GetByteValue(source, true);
 
-            if (MaxArrayLength == 1) {
-                return CastToInt == CastMode.NONE ? $"{ToSingle(value, 0)}\r\n" : $"{ToInt32(value, 0)}\r\n";
+                if (MaxArrayLength == 1) {
+                    return $"{ToSingle(value, 0)}\r\n";
+                }
+                else {
+                    string result = string.Empty;
+                    for (int i = 0; i < MaxArrayLength; i++) {
+                        result += $"{i}: {ToSingle(value, i * ElementSize)}\r\n";
+                    }
+                    return result;
+                }
             }
             else {
+                byte[] baseValue = base.GetByteValue(source, true);
+                byte[] convertedValue = GetByteValue(source, true);
+
                 string result = string.Empty;
-                for (int i = 0; i < MaxArrayLength; i++) {
-                    result += CastToInt == CastMode.NONE ? $"{i}: {ToSingle(value, i * ElementSize)}\r\n" : $"{i}: {ToInt32(value, i * ElementSize)}\r\n";
+                if (MaxArrayLength == 1) {
+                    result += $"Orig: {ToSingle(baseValue, 0)}\r\n";
+                    result += _CastToInt == CastMode.NONE ? $"Conv: {ToSingle(convertedValue, 0)}" : $"Conv: {ToInt32(convertedValue, 0)}";
+                }
+                else {
+                    for (int i = 0; i < MaxArrayLength; i++) {
+                        result += $"Orig[{i}]: {ToSingle(baseValue, i * ElementSize)}\r\n";
+                        result += _CastToInt == CastMode.NONE ? $"Conv[{i}]: {ToSingle(convertedValue, i * ElementSize)}\r\n\r\n" : $"Conv[{i}]: {ToInt32(convertedValue, i * ElementSize)}\r\n\r\n";
+                    }
                 }
                 return result;
             }
         }
     }
 
-    public class U64TelemVar : TelemVar {
+    public class U64TelemVar : StringableTelemVar {
         public U64TelemVar(string ID, string Name, string Description, string Category, long Position, int MaxArrayLength = 1) : base(ID, Name, Description, Category, Position, MaxArrayLength) {
 
         }
 
         public override int ElementSize => 8;
         public override string BasicTypeName => "uint64_t";
+        protected override int MaxStringifiedElementLength => 20;
+
+        public override byte[] GetByteValue(MemoryMappedViewAccessor source, bool wholeArray) {
+            byte[] value = base.GetByteValue(source, wholeArray);
+
+            if (Stringify) {
+                int elemsToRead = wholeArray ? MaxArrayLength : ArrayLength;
+                for (int i = 0; i < elemsToRead; i++) {
+                    string stringified = ToUInt64(value, i * ElementSize).ToString(CultureInfo.InvariantCulture);
+                    byte[] buffer = new byte[stringified.Length + 1];
+                    buffer[0] = (byte)stringified.Length;
+                    ASCII.GetBytes(stringified, 0, stringified.Length, buffer, 1);
+                    StringifyBuffer.Append(buffer);
+                }
+
+                return StringifyBuffer.Flush();
+            }
+            else {
+                return value;
+            }
+        }
 
         public override string GetStringValue(MemoryMappedViewAccessor source) {
             byte[] value = GetByteValue(source, true);
@@ -531,16 +773,18 @@ namespace YATTS {
         }
     }
 
-    public class StringTelemVar : TelemVar {
+    //convert to stringified
+    public class StringTelemVar : StringableTelemVar {
         public StringTelemVar(string ID, string Name, string Description, string Category, long Position) : base(ID, Name, Description, Category, Position) {
 
         }
 
         public override int ElementSize => 64;
-        public override string BasicTypeName => "char[]";
+        public override string BasicTypeName => "char[64]";
+        protected override int MaxStringifiedElementLength => 64;
 
         public override string GetStringValue(MemoryMappedViewAccessor source) {
-            return System.Text.Encoding.UTF8.GetString(GetByteValue(source, false)).TrimEnd('\0');
+            return UTF8.GetString(GetByteValue(source, false)).TrimEnd('\0');
         }
     }
 }

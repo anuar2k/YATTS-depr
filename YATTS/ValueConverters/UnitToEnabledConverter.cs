@@ -6,7 +6,7 @@ namespace YATTS {
     class UnitToEnabledConverter : IValueConverter {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
             if (value is Unit unit) {
-                if (unit == Unit.NONE || unit == Unit.NULL) {
+                if (unit == Unit.NONE) {
                     return false;
                 }
                 else {

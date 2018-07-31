@@ -15,9 +15,9 @@ namespace YATTS {
         private byte lastJobVal = 0;
 
         public EventVariableList(ObservableCollection<TelemVar> EventVars,
-                                U8TelemVar truckDataMarker,
-                                U8TelemVar trailerDataMarker,
-                                U8TelemVar jobDataMarker) {
+                                 U8TelemVar truckDataMarker,
+                                 U8TelemVar trailerDataMarker,
+                                 U8TelemVar jobDataMarker) {
             this.EventVars = EventVars;
             this.truckDataMarker = truckDataMarker;
             this.trailerDataMarker = trailerDataMarker;
