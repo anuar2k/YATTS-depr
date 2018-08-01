@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 
 namespace YATTS {
     public static class Consts {
@@ -27,14 +26,6 @@ namespace YATTS {
             JOB = "Job";
     }
 
-    public static class Extensions {
-        public static byte[] ToArrayAndClear(this MemoryStream memoryStream) {
-            byte[] value = memoryStream.ToArray();
-            memoryStream.Position = 0;
-            memoryStream.SetLength(0);
-            return value;
-        }
-    }
     public static class Converters {
         public static Dictionary<Unit, Dictionary<Unit, Func<float, float>>> ConverterDictionary = new Dictionary<Unit, Dictionary<Unit, Func<float, float>>>() {
             {

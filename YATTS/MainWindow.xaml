@@ -60,7 +60,7 @@
         <Grid Margin="8 2 8 8">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
-                <RowDefinition Height="3*"/>
+                <RowDefinition Height="5*"/>
             </Grid.RowDefinitions>
 
             <GroupBox Grid.Row="0" 
@@ -230,9 +230,29 @@
                                 <TextBlock Text=" elements" VerticalAlignment="Center"/>
                             </DockPanel>
 
+                            <CheckBox DockPanel.Dock="Top"
+                                      Margin="0 5 0 0"
+                                      Content="Stringify (available for number types)"
+                                      IsEnabled="{Binding SelectedStringable, Mode=OneWay, Converter={StaticResource NullToBool}}"
+                                      IsChecked="{Binding SelectedStringable.Stringify}">
+                            </CheckBox>
+
                             <GroupBox Header="Additional options for float type:"
                                       DockPanel.Dock="Top">
+                                <!-- prepare bindings -->
                                 <StackPanel>
+                                    <DockPanel DockPanel.Dock="Top"
+                                       Margin="0 5 0 0">
+                                        <TextBlock Text="Stringify: show max " VerticalAlignment="Center"/>
+                                        <xctk:IntegerUpDown Value="{Binding SelectedFloat.DecimalLength}" 
+                                                    Minimum="0"
+                                                    Maximum="8"
+                                                    IsEnabled="{Binding SelectedFloat, Mode=OneWay, Converter={StaticResource NullToBool}}"/>
+                                        <TextBlock Text=" decimal points" VerticalAlignment="Center"/>
+                                    </DockPanel>
+
+                                    <Separator Margin="0 5"/>
+                                    
                                     <RadioButton Content="Don't convert"
                                                  GroupName="CONVERT"
                                                  Name="dontConvertRadio"

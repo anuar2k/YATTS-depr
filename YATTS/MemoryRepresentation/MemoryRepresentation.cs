@@ -21,6 +21,7 @@ namespace YATTS {
                     _Selected = value;
                     OnPropertyChanged(nameof(Selected));
                     SelectedFloat = value as FloatTelemVar;
+                    SelectedStringable = value as StringableTelemVar;
                 }
             }
         }
@@ -34,6 +35,19 @@ namespace YATTS {
                 if (value != _SelectedFloat) {
                     _SelectedFloat = value;
                     OnPropertyChanged(nameof(SelectedFloat));
+                }
+            }
+        }
+
+        private StringableTelemVar _SelectedStringable;
+        public StringableTelemVar SelectedStringable {
+            get {
+                return _SelectedStringable;
+            }
+            set {
+                if (value != _SelectedStringable) {
+                    _SelectedStringable = value;
+                    OnPropertyChanged(nameof(SelectedStringable));
                 }
             }
         }

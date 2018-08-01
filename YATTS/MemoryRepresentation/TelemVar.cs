@@ -134,6 +134,7 @@ namespace YATTS {
                     else {
                         StringifyBuffer = null;
                     }
+                    OnPropertyChanged(nameof(TypeName));
                 }
             }
         }
@@ -243,15 +244,15 @@ namespace YATTS {
         }
 
         public override string GetStringValue(MemoryMappedViewAccessor source) {
-            byte[] value = GetByteValue(source, true);
+            byte[] baseValue = base.GetByteValue(source, true);
 
             if (MaxArrayLength == 1) {
-                return $"{value[0]}\r\n";
+                return $"{baseValue[0]}\r\n";
             }
             else {
                 string result = string.Empty;
                 for (int i = 0; i < MaxArrayLength; i++) {
-                    result += $"{i}: {value[i]}\r\n";
+                    result += $"{i}: {baseValue[i]}\r\n";
                 }
                 return result;
             }
@@ -288,15 +289,15 @@ namespace YATTS {
         }
 
         public override string GetStringValue(MemoryMappedViewAccessor source) {
-            byte[] value = GetByteValue(source, true);
+            byte[] baseValue = base.GetByteValue(source, true);
 
             if (MaxArrayLength == 1) {
-                return $"{ToUInt32(value, 0)}\r\n";
+                return $"{ToUInt32(baseValue, 0)}\r\n";
             }
             else {
                 string result = string.Empty;
                 for (int i = 0; i < MaxArrayLength; i++) {
-                    result += $"{i}: {ToUInt32(value, i * ElementSize)}\r\n";
+                    result += $"{i}: {ToUInt32(baseValue, i * ElementSize)}\r\n";
                 }
                 return result;
             }
@@ -333,22 +334,21 @@ namespace YATTS {
         }
 
         public override string GetStringValue(MemoryMappedViewAccessor source) {
-            byte[] value = GetByteValue(source, true);
+            byte[] baseValue = base.GetByteValue(source, true);
 
             if (MaxArrayLength == 1) {
-                return $"{ToInt32(value, 0)}\r\n";
+                return $"{ToInt32(baseValue, 0)}\r\n";
             }
             else {
                 string result = string.Empty;
                 for (int i = 0; i < MaxArrayLength; i++) {
-                    result += $"{i}: {ToSingle(value, i * ElementSize)}\r\n";
+                    result += $"{i}: {ToSingle(baseValue, i * ElementSize)}\r\n";
                 }
                 return result;
             }
         }
     }
 
-    //TODO: Provide GetByteValue and TypeName
     public class FloatTelemVar : StringableTelemVar {
         public FloatTelemVar(string ID, string Name, string Description, string Category, long Position, Unit Unit, int MaxArraySize = 1) : base(ID, Name, Description, Category, Position, MaxArraySize) {
             this.Unit = Unit;
@@ -462,6 +462,9 @@ namespace YATTS {
                 return _DecimalLength;
             }
             set {
+                if (value < 0 || value > 8) {
+                    throw new ArgumentOutOfRangeException("DecimalLength must be between 0 and 8");
+                }
                 if (value != _DecimalLength) {
                     _DecimalLength = value;
                     OnPropertyChanged(nameof(DecimalLength));
@@ -470,7 +473,7 @@ namespace YATTS {
             }
         }
 
-        public override byte[] GetByteValue(MemoryMappedViewAccessor source, bool wholeArray = false) {
+        private byte[] GetConvertedValue(MemoryMappedViewAccessor source, bool wholeArray = false) {
             int bytesToRead = wholeArray ? MaxDataSize : DataSize;
             int elemsToRead = wholeArray ? MaxArrayLength : ArrayLength;
 
@@ -494,7 +497,7 @@ namespace YATTS {
                     Array.Copy(newValue, 0, value, i * ElementSize, ElementSize);
                 }
             }
-            
+
             if (_CastToInt != CastMode.NONE) {
                 for (int i = 0; i < elemsToRead; i++) {
                     float temp = ToSingle(value, i * ElementSize);
@@ -515,7 +518,15 @@ namespace YATTS {
                 }
             }
 
+            return value;
+        }
+
+        public override byte[] GetByteValue(MemoryMappedViewAccessor source, bool wholeArray = false) {
+            byte[] value = GetConvertedValue(source, wholeArray);
+
             if (Stringify) {
+                int elemsToRead = wholeArray ? MaxArrayLength : ArrayLength;
+
                 for (int i = 0; i < elemsToRead; i++) {
                     byte[] buffer;
                     if (_CastToInt == CastMode.NONE) {
@@ -539,11 +550,33 @@ namespace YATTS {
                                 }
                             }
                             else {
+                                if (stringified.Length > 11) {
+                                    buffer = ASCII.GetBytes(new string('#', 13));
 
+                                    buffer[0] = 11;
+                                    buffer[12] = 0;
+                                }
+                                else {
+                                    buffer = new byte[stringified.Length + 2];
+
+                                    buffer[0] = (byte)stringified.Length;
+                                    buffer[stringified.Length + 1] = 0;
+                                    ASCII.GetBytes(stringified, 0, stringified.Length, buffer, 1);
+                                }
                             }
                         }
                         else {
+                            if (stringified.Length > 11) {
+                                buffer = ASCII.GetBytes(new string('#', 12));
 
+                                buffer[0] = 11;
+                            }
+                            else {
+                                buffer = new byte[stringified.Length + 1];
+
+                                buffer[0] = (byte)stringified.Length;
+                                ASCII.GetBytes(stringified, 0, stringified.Length, buffer, 1);
+                            }
                         }
                     }
                     else {
@@ -558,12 +591,13 @@ namespace YATTS {
 
                 return StringifyBuffer.Flush();
             }
-
-            return value;
+            else {
+                return value;
+            }
         }
 
         public override string GetStringValue(MemoryMappedViewAccessor source) {
-            if (_ConvertMode == ConvertMode.NONE && _CastToInt == CastMode.NONE) {
+            if (_ConvertMode == ConvertMode.NONE && _CastToInt == CastMode.NONE && !Stringify) {
                 byte[] value = base.GetByteValue(source, true);
 
                 if (MaxArrayLength == 1) {
@@ -579,7 +613,7 @@ namespace YATTS {
             }
             else {
                 byte[] baseValue = base.GetByteValue(source, true);
-                byte[] convertedValue = GetByteValue(source, true);
+                byte[] convertedValue = GetConvertedValue(source, true);
 
                 string result = string.Empty;
                 if (MaxArrayLength == 1) {
@@ -627,15 +661,15 @@ namespace YATTS {
         }
 
         public override string GetStringValue(MemoryMappedViewAccessor source) {
-            byte[] value = GetByteValue(source, true);
+            byte[] baseValue = base.GetByteValue(source, true);
 
             if (MaxArrayLength == 1) {
-                return $"{ToUInt64(value, 0)}\r\n";
+                return $"{ToUInt64(baseValue, 0)}\r\n";
             }
             else {
                 string result = string.Empty;
                 for (int i = 0; i < MaxArrayLength; i++) {
-                    result += $"{i}: {ToUInt64(value, i * ElementSize)}\r\n";
+                    result += $"{i}: {ToUInt64(baseValue, i * ElementSize)}\r\n";
                 }
                 return result;
             }
@@ -783,8 +817,23 @@ namespace YATTS {
         public override string BasicTypeName => "char[64]";
         protected override int MaxStringifiedElementLength => 64;
 
+        public override byte[] GetByteValue(MemoryMappedViewAccessor source, bool wholeArray) {
+            byte[] value = base.GetByteValue(source, wholeArray);
+
+            if (Stringify) {
+                string valueStr = UTF8.GetString(value).TrimEnd('\0');
+                byte[] newValue = new byte[valueStr.Length + 1];
+                newValue[0] = (byte)valueStr.Length;
+                UTF8.GetBytes(valueStr, 0, valueStr.Length, newValue, 1);
+                return newValue;
+            }
+            else {
+                return value;
+            }
+        }
+
         public override string GetStringValue(MemoryMappedViewAccessor source) {
-            return UTF8.GetString(GetByteValue(source, false)).TrimEnd('\0');
+            return UTF8.GetString(base.GetByteValue(source, false)).TrimEnd('\0');
         }
     }
 }
