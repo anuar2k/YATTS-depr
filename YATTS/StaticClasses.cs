@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Windows.Media;
 
 namespace YATTS {
     public static class Consts {
@@ -8,6 +9,7 @@ namespace YATTS {
             TRAILER_WHEEL_COUNT = 16,
             FWD_GEAR_COUNT = 32,
             RVS_GEAR_COUNT = 16;
+        public static Brush GOLDENRODYELLOW = new SolidColorBrush(Color.FromArgb(0xff, 0xda, 0xa5, 0x20));
     }
 
     public static class Categories {
@@ -24,6 +26,14 @@ namespace YATTS {
             TRUCK = "Truck",
             TRAILER = "Trailer",
             JOB = "Job";
+    }
+
+    public static class Helpers {
+        public static void ForEach<T>(this IEnumerable<T> enumerable, Action<T> action) {
+            foreach (var cur in enumerable) {
+                action(cur);
+            }
+        }
     }
 
     public static class Converters {
@@ -88,5 +98,15 @@ namespace YATTS {
         FLOOR,
         ROUND,
         CEIL
+    }
+
+    public enum SerialOpenResults {
+        OK,
+        FAILED_PORTNAME,
+        FAILED_NOTFOUND,
+        FAILED_ALREADYUSED,
+        FAILED_BAUDRATEOOR,
+        FAILED_BAUDRATENULL,
+        FAILED_UNKNOWN
     }
 }

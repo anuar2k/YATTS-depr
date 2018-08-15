@@ -10,12 +10,17 @@
         Height="768" Width="1024"
         ResizeMode="CanMinimize">
     <Window.Resources>
+        <local:BoolToColorConverter x:Key="BoolToColor"/>
         <local:BoolToFontWeightConverter x:Key="BoolToFontWeight"/>
+        <local:BoolToStringConverter x:Key="BoolToString"/>
         <local:EnumToRadioConverter x:Key="EnumToRadio"/>
-        <local:IsNullToBoolConverter x:Key="NullToBool"/>
+        <local:IntToStringConverter x:Key="IntToString"/>
+        <local:ModelFlagsToStatusConverter x:Key="ModelFlagsToStatus"/>
+        <local:NullToBoolConverter x:Key="NullToBool"/>
+        <local:SerialPortToStringConverter x:Key="SerialPortToString"/>
+        <local:TelemVarToQuantityConverter x:Key="TelemVarToQuantity"/>
         <local:UnitToConvertersConverter x:Key="UnitToConverters"/>
         <local:UnitToEnabledConverter x:Key="UnitToEnabled"/>
-        <local:TelemVarToQuantityConverter x:Key="TelemVarToQuantity"/>
 
         <Style TargetType="GridViewColumnHeader">
             <Setter Property="HorizontalContentAlignment" Value="Left"/>
@@ -37,8 +42,8 @@
                 <PropertyGroupDescription PropertyName="Category" />
             </CollectionViewSource.GroupDescriptions>
         </CollectionViewSource>
-        
-        <CollectionViewSource Source="{Binding EventVariableList.EventVars}" x:Key="EventVars">
+
+        <CollectionViewSource Source="{Binding EventVariableList.DisplayedVars}" x:Key="EventVars">
             <CollectionViewSource.GroupDescriptions>
                 <PropertyGroupDescription PropertyName="Category" />
             </CollectionViewSource.GroupDescriptions>
@@ -60,22 +65,120 @@
         <Grid Margin="8 2 8 8">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
-                <RowDefinition Height="5*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="6*"/>
             </Grid.RowDefinitions>
 
-            <GroupBox Grid.Row="0" 
-                      Header="Connections">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <Button Click="Button_Click">HookUp</Button>
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="3*"/>
+                    <ColumnDefinition Width="2*"/>
+                </Grid.ColumnDefinitions>
 
-                </Grid>
-            </GroupBox>
+                <GroupBox Grid.Column="0"
+                          Header="Connection settings"
+                          Margin="0 0 4 0">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="3*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="4*"/>
+                        </Grid.ColumnDefinitions>
 
-            <Grid Grid.Row="1">
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Margin="3 4 0 0">
+                                <Run Text="Game status: "/>
+                                <Run Text="{Binding ConnectedToGame, Mode=OneWay, Converter={StaticResource BoolToString}, ConverterParameter=caps-connected}"
+                                     Foreground="{Binding ConnectedToGame, Mode=OneWay, Converter={StaticResource BoolToColor}}"
+                                     FontWeight="Bold"/>
+                            </TextBlock>
+                            <TextBlock Margin="3 7 0 0">
+                                <Run Text="Serial status: "/>
+                                <Run Text="{Binding serialPort, Mode=OneWay, Converter={StaticResource SerialPortToString}}"
+                                     Foreground="{Binding SerialOpen, Mode=OneWay, Converter={StaticResource BoolToColor}}"
+                                     FontWeight="Bold"/>
+                            </TextBlock>
+                            <TextBlock Margin="3 7 0 0">
+                                <Run Text="Data streaming: "/>
+                                <Run FontWeight="Bold">
+                                    <Run.Text>
+                                        <MultiBinding Converter="{StaticResource ModelFlagsToStatus}"
+                                                      Mode="OneWay">
+                                            <Binding Path="ConnectedToGame"/>
+                                            <Binding Path="SerialOpen"/>
+                                            <Binding Path="StreamingEnabled"/>
+                                        </MultiBinding>
+                                    </Run.Text>
+                                    <Run.Foreground>
+                                        <MultiBinding Converter="{StaticResource ModelFlagsToStatus}"
+                                                      ConverterParameter="color"
+                                                      Mode="OneWay">
+                                            <Binding Path="ConnectedToGame"/>
+                                            <Binding Path="SerialOpen"/>
+                                            <Binding Path="StreamingEnabled"/>
+                                        </MultiBinding>
+                                    </Run.Foreground>
+                                </Run>
+                            </TextBlock>
+                        </StackPanel>
+
+                        <Separator Grid.Column="1"
+                                   Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}"
+                                   Margin="4 0"/>
+
+                        <!-- add bindings -->
+                        <StackPanel Grid.Column="2">
+                            <StackPanel Orientation="Horizontal"
+                                        Margin="3 0 0 0">
+                                <TextBlock VerticalAlignment="Center">Game:</TextBlock>
+                                <Button Width="71"
+                                        HorizontalAlignment="Left"
+                                        Margin="4 0 0 0"
+                                        Content="{Binding ConnectedToGame, Mode=OneWay, Converter={StaticResource BoolToString}, ConverterParameter=inverted-connect-btn}"
+                                        Click="GameButton_Click"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal"
+                                        Margin="3 4 0 0">
+                                <TextBlock VerticalAlignment="Center">Serial port:</TextBlock>
+                                <Button Width="71"
+                                        HorizontalAlignment="Left"
+                                        Margin="4 0 0 0"
+                                        Content="{Binding SerialOpen, Mode=OneWay, Converter={StaticResource BoolToString}, ConverterParameter=inverted-open-btn}"
+                                        Click="SerialButton_Click"/>
+                                <TextBlock VerticalAlignment="Center"
+                                           Margin="4 0"
+                                           Text="to"/>
+                                <TextBox Width="60"
+                                         Text="{Binding SerialPortName}"></TextBox>
+                                <TextBlock VerticalAlignment="Center"
+                                           Margin="4 0"
+                                           Text="@"/>
+                                <TextBox Width="96"
+                                         PreviewTextInput="BaudrateTextBox_PreviewTextInput"
+                                         DataObject.Pasting="BaudrateTextBox_Pasting"
+                                         Text="{Binding SerialPortBaudrate, Converter={StaticResource IntToString}}"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal"
+                                        Margin="3 4 0 0">
+                                <TextBlock VerticalAlignment="Center">Data streaming:</TextBlock>
+                                <Button Width="71"
+                                        Margin="4 0 0 0"
+                                        Content="{Binding StreamingEnabled, Mode=OneWay, Converter={StaticResource BoolToString}, ConverterParameter=inverted-onoff-btn}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+                </GroupBox>
+                
+                <GroupBox Grid.Column="1"
+                          Header="Profile manager"
+                          Margin="4 0 0 0">
+                    
+                </GroupBox>
+            </Grid>
+
+            <Separator Grid.Row="1"
+                       Margin="0 8 0 4"/>
+            <Grid Grid.Row="2">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="*"/>
@@ -137,8 +240,8 @@
                                   SelectionMode="Single"
                                   ScrollViewer.VerticalScrollBarVisibility="Visible"
                                   ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                  ItemsSource="{Binding Source={StaticResource EventVars}}"
-                                  SelectionChanged="eventListView_SelectionChanged">
+                                  SelectionChanged="eventListView_SelectionChanged"
+                                  ItemsSource="{Binding Source={StaticResource EventVars}}">
                             <ListView.View>
                                 <GridView>
                                     <GridViewColumn Header=" Name" 
@@ -193,7 +296,7 @@
                                 <TextBlock Text="Stream this value to your device"
                                            FontWeight="Bold"/>
                             </CheckBox>
-                                
+
                             <TextBlock Text="ID:" 
                                        DockPanel.Dock="Top"/>
 
@@ -252,7 +355,7 @@
                                     </DockPanel>
 
                                     <Separator Margin="0 5"/>
-                                    
+
                                     <RadioButton Content="Don't convert"
                                                  GroupName="CONVERT"
                                                  Name="dontConvertRadio"
@@ -294,24 +397,24 @@
                                                   SelectedValue="{Binding SelectedFloat.TargetUnit}"
                                                   IsEnabled="{Binding IsChecked, ElementName=changeUnitRadio, Mode=OneWay}"/>
                                     </StackPanel>
-                                    
+
                                     <Separator Margin="0 5"/>
-                                    
+
                                     <RadioButton Content="Don't cast"
                                          GroupName="CAST"
                                          IsEnabled="{Binding SelectedFloat, Mode=OneWay, Converter={StaticResource NullToBool}}"
                                          IsChecked="{Binding SelectedFloat.CastToInt, Converter={StaticResource EnumToRadio}, ConverterParameter=NONE}"/>
-                                    
+
                                     <RadioButton Content="Floor this value and cast it to int32"
                                          GroupName="CAST"
                                          IsEnabled="{Binding SelectedFloat, Mode=OneWay, Converter={StaticResource NullToBool}}"
                                          IsChecked="{Binding SelectedFloat.CastToInt, Converter={StaticResource EnumToRadio}, ConverterParameter=FLOOR}"/>
-                                    
+
                                     <RadioButton Content="Round this value and cast it to int32"
                                          GroupName="CAST"
                                          IsEnabled="{Binding SelectedFloat, Mode=OneWay, Converter={StaticResource NullToBool}}"
                                          IsChecked="{Binding SelectedFloat.CastToInt, Converter={StaticResource EnumToRadio}, ConverterParameter=ROUND}"/>
-                                    
+
                                     <RadioButton Content="Ceil this value and cast it to int32"
                                          GroupName="CAST"
                                          IsEnabled="{Binding SelectedFloat, Mode=OneWay, Converter={StaticResource NullToBool}}"

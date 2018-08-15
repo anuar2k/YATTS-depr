@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Diagnostics;
+using System.IO.Ports;
+using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -11,29 +13,17 @@ namespace YATTS {
     /// Logika interakcji dla klasy MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window {
-        private MemoryRepresentation MemoryRepresentation;
+        private Model Model;
 
-        public MainWindow() {
+        public MainWindow(Model Model) {
+            this.Model = Model;
+
             InitializeComponent();
-
-            MemoryRepresentation = new MemoryRepresentation();
-            DataContext = MemoryRepresentation;
-
-            int sum = 0;
-            MemoryRepresentation.StreamedVars.ForEach(var => {
-                sum += var.DataSize;
-            });
-
-            MemoryRepresentation.EventVariableList.EventVars.ForEach(var => {
-                sum += var.DataSize;
-            });
-
-            sum += 3; //new data available markers, see EventVariableList.cs
-            Title = $"The MemoryRepresentation sum is {sum}";
+            DataContext = Model;
         }
 
         private void streamedListView_SelectionChanged(object sender, SelectionChangedEventArgs e) {
-            MemoryRepresentation.Selected = (TelemVar)streamedListView.SelectedItem;
+            Model.Selected = (TelemVar)streamedListView.SelectedItem;
 
             eventListView.SelectionChanged -= eventListView_SelectionChanged;
             eventListView.SelectedItem = null;
@@ -42,7 +32,7 @@ namespace YATTS {
         }
 
         private void eventListView_SelectionChanged(object sender, SelectionChangedEventArgs e) {
-            MemoryRepresentation.Selected = (TelemVar)eventListView.SelectedItem;
+            Model.Selected = (TelemVar)eventListView.SelectedItem;
 
             streamedListView.SelectionChanged -= streamedListView_SelectionChanged;
             streamedListView.SelectedItem = null;
@@ -50,30 +40,10 @@ namespace YATTS {
             UpdateValue();
         }
 
-        private void ListViewItem_MouseDoubleClick(object sender, MouseButtonEventArgs e) {
-            if (MemoryRepresentation.Selected != null) {
-                MemoryRepresentation.Selected.Streamed = !MemoryRepresentation.Selected.Streamed;
-            }
-        }
-
-        private void ConvertButton_Click(object sender, RoutedEventArgs e) {
-
-        }
-
-        private void Button_Click(object sender, RoutedEventArgs e) {
-            MemoryRepresentation.Hook();
-            Task.Factory.StartNew(() => {
-                while (true) {
-                    Dispatcher.Invoke(new Action(UpdateValue));
-                    Thread.Sleep(100);
-                }
-            });
-        }
-
         private void UpdateValue() {
-            if (MemoryRepresentation.Selected != null) {
-                if (MemoryRepresentation.MMVA?.CanRead ?? false) {
-                    string text = MemoryRepresentation.Selected.GetStringValue(MemoryRepresentation.MMVA);
+            if (Model.Selected != null) {
+                if (Model.ConnectedToGame) {
+                    string text = Model.Selected.GetStringValue(Model.MMVA);
                     valueTextBox.Text = text;
                 }
             }
@@ -81,12 +51,67 @@ namespace YATTS {
                 valueTextBox.Text = String.Empty;
             }
         }
-    }
 
-    public static class Helper {
-        public static void ForEach<T>(this IEnumerable<T> enumerable, Action<T> action) {
-            foreach (var cur in enumerable) {
-                action(cur);
+        private Regex baudrateRegex = new Regex("[^0-9]+");
+        private void BaudrateTextBox_PreviewTextInput(object sender, TextCompositionEventArgs e) {
+            e.Handled = baudrateRegex.IsMatch(e.Text);
+        }
+
+        private void BaudrateTextBox_Pasting(object sender, DataObjectPastingEventArgs e) {
+            if (e.DataObject.GetDataPresent(typeof(String))) {
+                String text = (String)e.DataObject.GetData(typeof(String));
+                if (baudrateRegex.IsMatch(text)) {
+                    e.CancelCommand();
+                }
+            }
+            else {
+                e.CancelCommand();
+            }
+        }
+
+        private void GameButton_Click(object sender, RoutedEventArgs e) {
+            if (Model.ConnectedToGame) {
+                Model.DisconnectFromGame();
+                MessageBox.Show("Game disconnected.", "Disconnect", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            else {
+                if (Model.ConnectToGame()) {
+                    MessageBox.Show("Game successfully connected!", "Connect", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                else {
+                    MessageBox.Show("Connection attempt failed. You must run your game first.", "Connect", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void SerialButton_Click(object sender, RoutedEventArgs e) {
+            if (Model.SerialOpen) {
+                Model.CloseSerial();
+            }
+            else {
+                switch (Model.OpenSerial()) {
+                    case SerialOpenResults.OK:
+                        MessageBox.Show("Serial port successfully opened.", "Open serial port", MessageBoxButton.OK, MessageBoxImage.Information);
+                        break;
+                    case SerialOpenResults.FAILED_PORTNAME:
+                        MessageBox.Show("The serial port name you entered is wrong.", "Open serial port", MessageBoxButton.OK, MessageBoxImage.Error);
+                        break;
+                    case SerialOpenResults.FAILED_NOTFOUND:
+                        MessageBox.Show($"There is no serial port named {Model.SerialPortName} available.", "Open serial port", MessageBoxButton.OK, MessageBoxImage.Error);
+                        break;
+                    case SerialOpenResults.FAILED_ALREADYUSED:
+                        MessageBox.Show($"Port {Model.SerialPortName} is already used by another app. You need to close it first (release the port).", "Open serial port", MessageBoxButton.OK, MessageBoxImage.Error);
+                        break;
+                    case SerialOpenResults.FAILED_BAUDRATEOOR:
+                        MessageBox.Show($"Port {Model.SerialPortName} doesn't support {Model.SerialPortBaudrate} baud (it might exceed the maximum possible value).", "Open serial port", MessageBoxButton.OK, MessageBoxImage.Error);
+                        break;
+                    case SerialOpenResults.FAILED_BAUDRATENULL:
+                        MessageBox.Show("You must enter baudrate first.", "Open serial port", MessageBoxButton.OK, MessageBoxImage.Error);
+                        break;
+                    case SerialOpenResults.FAILED_UNKNOWN:
+                        MessageBox.Show($"Unknown exception, GetLastError: {Marshal.GetLastWin32Error()} - report it to me!", "Open serial port", MessageBoxButton.OK, MessageBoxImage.Error);
+                        break;
+                }
             }
         }
     }

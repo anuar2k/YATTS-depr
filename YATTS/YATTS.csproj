@@ -67,6 +67,8 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -87,14 +89,19 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="MemoryRepresentation\ByteBuffer.cs" />
+    <Compile Include="Model\ByteBuffer.cs" />
     <Compile Include="StaticClasses.cs" />
+    <Compile Include="ValueConverters\BoolToColorConverter.cs" />
     <Compile Include="ValueConverters\BoolToFontWeightConverter.cs" />
+    <Compile Include="ValueConverters\BoolToStringConverter.cs" />
     <Compile Include="ValueConverters\EnumToRadioConverter.cs" />
-    <Compile Include="ValueConverters\IsNullToBoolConverter.cs" />
-    <Compile Include="MemoryRepresentation\EventVariableList.cs" />
-    <Compile Include="MemoryRepresentation\TelemVar.cs" />
-    <Compile Include="MemoryRepresentation\MemoryRepresentation.cs" />
+    <Compile Include="ValueConverters\IntToStringConverter.cs" />
+    <Compile Include="ValueConverters\ModelFlagsToStatusConverter.cs" />
+    <Compile Include="ValueConverters\NullToBoolConverter.cs" />
+    <Compile Include="Model\EventVariableList.cs" />
+    <Compile Include="Model\TelemVar.cs" />
+    <Compile Include="Model\Model.cs" />
+    <Compile Include="ValueConverters\SerialPortToStringConverter.cs" />
     <Compile Include="ValueConverters\TelemVarToQuantityConverter.cs" />
     <Compile Include="ValueConverters\UnitToEnabledConverter.cs" />
     <Compile Include="ValueConverters\UnitToConvertersConverter.cs" />

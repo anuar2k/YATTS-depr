@@ -1,11 +1,17 @@
 ﻿using System;
 using System.Globalization;
+using System.IO.Ports;
 using System.Windows.Data;
 
 namespace YATTS {
-    public class IsNullToBoolConverter : IValueConverter {
+    class SerialPortToStringConverter : IValueConverter {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
-            return value == null ? false : true;
+            if (value is SerialPort serialPortValue) {
+                if (serialPortValue.IsOpen) {
+                    return $"{serialPortValue.PortName} @ {serialPortValue.BaudRate} baud";
+                }
+            }
+            return "CLOSED";
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {

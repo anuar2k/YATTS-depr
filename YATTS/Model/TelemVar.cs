@@ -92,7 +92,12 @@ namespace YATTS {
                         return $"{BasicTypeName}[{MaxArrayLength}] -> {BasicTypeName}";
                     }
                     else {
-                        return $"{BasicTypeName}[{MaxArrayLength}] -> {BasicTypeName}[{ArrayLength}]";
+                        if (ArrayLength == MaxArrayLength) {
+                            return $"{BasicTypeName}[{MaxArrayLength}]";
+                        }
+                        else {
+                            return $"{BasicTypeName}[{MaxArrayLength}] -> {BasicTypeName}[{ArrayLength}]";
+                        }
                     }
                 }
             }
