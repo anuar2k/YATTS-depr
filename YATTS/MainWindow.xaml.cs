@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO.Ports;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Windows;
